@@ -6,7 +6,6 @@
   - Detect anomalies and failure patterns using rule-based and statistical analysis techniques.
   - Send unsolvable error to human via notification or mail.
   - Automatically create and manage incident records with lifecycle states including Open, In Progress, and Resolved.
-  - Correlate related log events across services and defined time windows to identify incidents.
   - Maintain logs of all incidents, automated actions, and failures for auditing and debugging.
   - Assign incident severity based on error frequency, impact, and correlation confidence.
   - Enforce safety mechanisms including retry limits and cooldown periods for automated actions.
@@ -20,7 +19,6 @@
   - Minimize performance overhead on application services generating logs.
   - Process logs with near real-time latency suitable for production environments.
   - Support scaling to handle increasing log volume and number of monitored services.
-  - Protect system data using appropriate security measures.
   - Provide basic monitoring of system health and processing status.
   
 3. SYSTEM AND DEPLOYMENT REQUIREMENTS
@@ -29,4 +27,4 @@
   - support microservices-based architectures and container orchestration platforms.
   - Integrate with log shippers and external tools through standard interfaces.
   - Support backup and recovery of incident data and configuration.
-  - Support secure user authentication.
+  
