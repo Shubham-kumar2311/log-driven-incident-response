@@ -2,31 +2,32 @@
   - Ingest unstructured and semi-structured logs from multiple application services and infrastructure components in real time.
   - Support log ingestion using external log shippers and streaming pipelines. (FluentBit)
   -	Parse and normalize incoming logs into a common internal format to enable unified analysis and correlation.
-  -	Parse like service name, timestamp, severity level, error type, and contextual metadata.
+  -	Parse key attributes such as service name, timestamp, severity level, error type, and contextual metadata.
   - Detect anomalies and failure patterns using rule-based and statistical analysis techniques.
   - Correlate related log events across different services and timeframes to identify root causes of failures.
   - Send unsolvable error to human via notification or mail.
   - Automatically create and manage incident records with lifecycle states including Open, In Progress, and Resolved.
-  - Maintain logs of all incidents, automated actions, and failures for auditing and debugging.
   - Assign incident severity based on error frequency, impact, and correlation confidence.
+  - Support configurable response playbooks that map incident types to automated and manual recovery actions.
   - Support automated response actions to remediate detected issues, such as restarting services or scaling resources.
   - Execute automated recovery actions such as service restarts, deployment rollbacks, or resource scaling.
   - Enforce safety mechanisms including retry limits and cooldown periods for automated actions.
   - Require manual approval for high-risk recovery actions.
   - Notify users when incidents are created, updated, or resolved via email, SMS, or messaging platforms.
-  - Maintain an logs of all incidents, automated actions, and failures for auditing and debugging.
+  - Maintain logs of all incidents, automated actions, and failures for auditing and debugging.
   - Escalate incidents to human operators when automated recovery actions fail.
 
 2. NON-FUNCTIONAL REQUIREMENTS
-  - No latency, highly available
+  - Near real-time processing with high availability.
   - Reliable buffering and replay of logs for reprocessing and analysis
   - Maintain version history for detection rules, response playbooks, and configuration changes.
   - Ensure reliability and fault tolerance during partial system failures.
   - Minimize performance overhead on application services generating logs.
   - Allow updates to detection rules and response playbooks without system downtime.
-  - Protect sensitive log data through encryption and access controls.
+  - Protect sensitive log data through encryption at rest and in transit, along with role-based access controls.
   - Process logs with near real-time latency suitable for production environments.
   - Support scaling to handle increasing log volume and number of monitored services.
+  - Ensure predictable performance under peak log ingestion loads.
   - Provide basic monitoring of system health and processing status.
   
 3. SYSTEM AND DEPLOYMENT REQUIREMENTS
