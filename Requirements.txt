@@ -5,12 +5,26 @@
   -	Parse like service name, timestamp, severity level, error type, and contextual metadata.
   - Detect anomalies and failure patterns using rule-based and statistical analysis techniques.
   - Send unsolvable error to human via notification or mail.
+  - Automatically create and manage incident records with lifecycle states including Open, In Progress, and Resolved.
+  - Maintain logs of all incidents, automated actions, and failures for auditing and debugging.
+  - Assign incident severity based on error frequency, impact, and correlation confidence.
+  - Enforce safety mechanisms including retry limits and cooldown periods for automated actions.
+  - Escalate incidents to human operators when automated recovery actions fail.
 
 2. NON-FUNCTIONAL REQUIREMENTS
   - No latency, highly available
   - reliable buffering and replay of logs for reprocessing and analysis
   - maintain version history for detection rules, response playbooks, and configuration changes.
-
+  - Ensure reliability and fault tolerance during partial system failures.
+  - Minimize performance overhead on application services generating logs.
+  - Process logs with near real-time latency suitable for production environments.
+  - Support scaling to handle increasing log volume and number of monitored services.
+  - Provide basic monitoring of system health and processing status.
+  
 3. SYSTEM AND DEPLOYMENT REQUIREMENTS
   - deployable in cloud-based, containerized, or on-premise environments.
+  - Provide a web-based interface for viewing incidents and system status.
   - support microservices-based architectures and container orchestration platforms.
+  - Integrate with log shippers and external tools through standard interfaces.
+  - Support backup and recovery of incident data and configuration.
+  
