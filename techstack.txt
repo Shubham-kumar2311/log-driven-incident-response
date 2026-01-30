@@ -1,0 +1,70 @@
+TECH STACK OF THE PROJECT
+------------------------
+
+1. Log Ingestion Layer
+- Fluent Bit
+  Used for lightweight and efficient log shipping from application services.
+- Apache Kafka (Optional)
+  Used for buffering and decoupling log producers and consumers in scalable deployments.
+
+2. Log Processing and Normalization
+- Python
+  Used for log parsing, normalization, and enrichment.
+- Regular Expressions and JSON Parsing
+  Used to process unstructured and semi-structured logs.
+- Pydantic
+  Used to enforce a common internal log schema.
+
+3. Failure Detection and Correlation Engine
+- Rule-Based Detection
+  Configurable detection rules defined using JSON or YAML.
+- Anomaly-Based Detection
+  Statistical techniques such as moving averages, thresholds, or z-score analysis.
+- Scikit-learn (Optional)
+  Used for lightweight anomaly detection models like Isolation Forest.
+
+4. Incident Management Module
+- FastAPI
+  Backend framework for incident APIs and lifecycle management.
+- PostgreSQL
+  Persistent storage for incidents, logs, and audit data.
+- SQLAlchemy
+  ORM for database interaction.
+
+5. Automated Response Engine
+- Python
+  Executes automated recovery workflows.
+- YAML-Based Playbooks
+  Maps incident types to recovery actions.
+- Docker SDK
+  Used for restarting services or managing containers.
+- Shell Scripts
+  Used for deployment rollback and system-level recovery actions.
+
+6. Dashboard and Notifications
+- React.js
+  Web-based user interface for monitoring incidents and system status.
+- Chart.js / Recharts
+  Visualization of incidents and trends.
+- Email / Webhooks
+  Notification and escalation mechanisms.
+
+7. Security and Authentication
+- JWT (JSON Web Tokens)
+  Used for authentication and authorization.
+- Role-Based Access Control
+  Supports different user roles such as admin, operator, and viewer.
+
+8. Deployment and Infrastructure
+- Docker
+  Containerization of system components.
+- Docker Compose
+  Local and academic deployment orchestration.
+- Linux
+  Target operating system for deployment.
+
+9. Monitoring and Health Checks
+- Health Check APIs
+  Used to monitor system availability.
+- Internal Metrics
+  Tracks log throughput, detection latency, and system status.
