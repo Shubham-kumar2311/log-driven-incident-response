@@ -1,6 +1,7 @@
-1. FUNCTIONAL REQUIREMENTS
+1) FUNCTIONAL REQUIREMENTS
+  --------------------------
   - Ingest unstructured and semi-structured logs from multiple application services and infrastructure components in real time.
-  - Support log ingestion using external log shippers and streaming pipelines. (FluentBit)
+  - Support log ingestion using external log shippers and streaming pipelines. (FluentBit/FileBit)
   -	Parse and normalize incoming logs into a common internal format to enable unified analysis and correlation.
   -	Parse key attributes such as service name, timestamp, severity level, error type, and contextual metadata.
   - Detect anomalies and failure patterns using rule-based and statistical analysis techniques.
@@ -17,7 +18,8 @@
   - Maintain logs of all incidents, automated actions, and failures for auditing and debugging.
   - Escalate incidents to human operators when automated recovery actions fail.
 
-2. NON-FUNCTIONAL REQUIREMENTS
+2) NON-FUNCTIONAL REQUIREMENTS
+  -----------------------------
   - Near real-time processing with high availability.
   - Reliable buffering and replay of logs for reprocessing and analysis
   - Maintain version history for detection rules, response playbooks, and configuration changes.
@@ -30,7 +32,8 @@
   - Ensure predictable performance under peak log ingestion loads.
   - Provide basic monitoring of system health and processing status.
   
-3. SYSTEM AND DEPLOYMENT REQUIREMENTS
+3) SYSTEM AND DEPLOYMENT REQUIREMENTS
+  --------------------------------------
   - Deployable in cloud-based, containerized, or on-premise environments.
   - Provide a web-based interface for viewing incidents and system status.
   - Support microservices-based architectures and container orchestration platforms.
@@ -38,4 +41,3 @@
   - Use persistent storage for logs, incident data, and configuration information.
   - Support secure authentication and authorization mechanisms for system access.
   - Support backup and recovery of incident data and configuration.
-  
