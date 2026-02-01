@@ -1,0 +1,9 @@
+NOVELTY OF THE PROJECT
+
+This project introduces a log-driven, self-healing incident response system that focuses on automated recovery rather than passive monitoring. Unlike traditional log monitoring solutions that only generate alerts, the system actively correlates unstructured logs, identifies failure patterns, and executes guarded recovery actions such as service restarts and deployment rollbacks.
+
+A key novelty of this project is the clear separation between detection and response, where incident detection is handled through rule-based and anomaly-based analysis, while recovery actions are executed through configurable response playbooks with built-in safety controls like retry limits, cooldown periods, and manual approval for high-risk actions. This design ensures automation remains safe, auditable, and predictable.
+
+Another novel aspect is the system’s ability to operate effectively on unstructured logs, using best-effort parsing and correlation rather than relying on perfectly structured inputs. This makes the system resilient to real-world logging inconsistencies commonly found in production environments.
+
+The project also supports incident lifecycle management, enabling detection, mitigation, and resolution tracking, along with metrics such as Mean Time To Recovery (MTTR) to quantify reliability improvements. By combining log analysis, incident correlation, and automated remediation in a single pipeline, the system demonstrates a practical and production-oriented approach to reliability engineering.
