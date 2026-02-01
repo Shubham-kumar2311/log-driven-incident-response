@@ -2,13 +2,13 @@ NOVELTY OF THE PROJECT
 ---------------------
 
 1. Log-Driven Automated Incident Response
-Most traditional systems focus only on log collection and alerting. This project goes beyond monitoring by using logs as direct triggers for automated incident creation and recovery actions. The system forms a closed feedback loop from detection to resolution.
+Traditional monitoring systems primarily rely on metrics and alerts, treating logs as passive diagnostic data. This project goes beyond monitoring by treating application logs as first-class control signals for automated incident creation and recovery actions. The system forms a closed feedback loop from detection to resolution.
 
 2. Cross-Service Incident Correlation
 The system correlates log events across multiple services within defined time windows to identify system-level incidents. This helps in detecting cascading failures rather than isolated service errors.
 
 3. Hybrid Failure Detection Approach
-The project combines rule-based detection for known failure patterns with anomaly-based detection for unknown or rare behaviors. This hybrid approach improves detection accuracy and reduces false positives.
+The project combines rule-based detection for known failure patterns with anomaly-based detection for unknown or rare behaviors. This dual detection strategy balances precision for known failures with adaptability to previously unseen system behaviors.
 
 4. Safety-Aware Automated Recovery
 Automated recovery actions are executed with safety mechanisms such as retry limits, cooldown periods, and manual approval for high-risk operations. This prevents unstable or unsafe automated behavior.
