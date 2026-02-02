@@ -1,0 +1,25 @@
+NOVEL FEATURES OF THE SYSTEM
+
+- Failure-Aware Automation
+The system tracks failed automated recovery actions and avoids repeating the same actions for similar incident patterns in the future, preventing repeated ineffective or harmful remediation attempts.
+
+- Safety-Bounded Responses
+Automated recovery actions operate within predefined safety limits such as retry thresholds, cooldown periods, and protected services, ensuring automation does not introduce additional system instability.
+
+- Incident-Centric Design
+Failures are modeled as stateful incidents with controlled lifecycle stages rather than simple alert groupings, enabling consistent tracking, escalation, and resolution.
+
+- Context-Aware Playbook Selection
+Response playbooks are selected based on incident severity, priority, correlation context, and execution history rather than relying solely on individual alert types.
+
+- Simulation-Based Validation
+Synthetic logs and simulated failure scenarios are used to validate detection logic and response workflows before deployment, reducing risk during real incidents.
+
+- Human-in-the-Loop Escalation
+High-risk recovery actions and failed automation attempts are automatically escalated to on-call engineers, ensuring human oversight where automated decisions may be unsafe.
+
+- Separation of Orchestration and Actuation
+Incident response decision logic is decoupled from execution mechanisms, improving system safety, maintainability, and extensibility.
+
+- Audit-First Design
+All incidents, automated actions, manual approvals, and failures are recorded to provide full traceability, support debugging, and enable post-incident analysis.
