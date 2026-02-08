@@ -67,3 +67,92 @@ class AuditLog
     String actionPerformed
     String outcome
 }
+
+Service Classes
+
+class LogIngestionService
+{
+    String sourceType
+
+    void collectLog(String rawLog)
+    void forwardLog(String rawLog)
+}
+
+
+class LogProcessingService
+{
+    List<String> parsingRules
+
+    LogEvent parseLog(String rawLog)
+    LogEvent normalizeLog(LogEvent)
+}
+
+class DetectionService
+{
+    RuleEngine rules
+    AnomalyEngine anomalyDetector
+
+    DetectionSignal analyze(LogEvent)
+}
+
+
+class IncidentManagementService
+{
+    Map<String, Incident> incidentStore
+
+    Incident createIncident(DetectionSignal)
+    Incident correlateSignal(DetectionSignal)
+    void closeIncident(String incidentID)
+}
+
+class ResponseAutomationEngine
+{
+    Map<String, Playbook> playbooks
+
+    Playbook selectPlaybook(Incident)
+    String decideResponse(Incident)
+}
+
+
+class ResponseExecutor
+{
+    void executeAction(PlaybookStep)
+    void reportExecutionStatus(String status)
+}
+
+class NotificationService
+{
+    void notifyAnalyst(Incident)
+    void sendAlert(String message)
+}
+
+
+class AuditService
+{
+    void recordAuditLog(AuditLog)
+    List<AuditLog> generateReport(Incident)
+}
+
+Simulation Interfaces
+
+class RuleEngine
+{
+    Boolean matchRule(LogEvent)
+}
+
+class AnomalyEngine
+{
+    Boolean detectAnomaly(LogEvent)
+}
+
+class SystemActuator
+{
+    <<Interface>>
+    Boolean performAction(String command, String target)
+}
+
+class ServiceRestartActuator
+{
+    Boolean performAction()
+    void restartService(String serviceName)
+}
