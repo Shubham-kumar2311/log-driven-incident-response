@@ -1,0 +1,69 @@
+Core Domain Classes
+
+class LogEvent
+{
+    String eventID
+    String serviceName
+    DateTime timestamp
+    String logLevel
+    String message
+    String rawLog
+    Boolean parsed
+
+    void normalize()
+    Boolean isValid()
+}
+
+class DetectionSignal
+{
+    String signalID
+    String signalType
+    String severity
+    String sourceService
+    DateTime detectedAt
+
+    Boolean isCritical()
+}
+
+class Incident
+{
+    String incidentID
+    String status
+    String priority
+    List<DetectionSignal> relatedSignals
+    Map<String, String> contextData
+    int occurrenceCount
+
+    void addSignal(DetectionSignal)
+    void updateStatus(String)
+    void escalate()
+}
+
+class Playbook
+{
+    String playbookID
+    String name
+    String triggerSignal
+    Boolean requiresApproval
+    List<PlaybookStep> steps
+
+    List<PlaybookStep> getSteps()
+}
+
+class PlaybookStep
+{
+    int stepOrder
+    String actionType
+    String targetService
+    String command
+    int retryCount
+}
+
+class AuditLog
+{
+    String auditID
+    DateTime timestamp
+    String componentName
+    String actionPerformed
+    String outcome
+}
