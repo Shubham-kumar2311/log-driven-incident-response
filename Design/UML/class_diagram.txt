@@ -2,157 +2,163 @@ Core Domain Classes
 
 class LogEvent
 {
-    String eventID
-    String serviceName
-    DateTime timestamp
-    String logLevel
-    String message
-    String rawLog
-    Boolean parsed
+- eventID : String
+- serviceName : String
+- timestamp : DateTime
+- logLevel : String
+- message : String
+- rawLog : String
+- parsed : Boolean
 
-    void normalize()
-    Boolean isValid()
++ normalize() : void
++ isValid() : Boolean
 }
+
 
 class DetectionSignal
 {
-    String signalID
-    String signalType
-    String severity
-    String sourceService
-    DateTime detectedAt
+- signalID : String
+- signalType : String
+- severity : String
+- sourceService : String
+- detectedAt : DateTime
 
-    Boolean isCritical()
++ isCritical() : Boolean
 }
 
 class Incident
 {
-    String incidentID
-    String status
-    String priority
-    List<DetectionSignal> relatedSignals
-    Map<String, String> contextData
-    int occurrenceCount
+- incidentID : String
+- status : String
+- priority : String
+- relatedSignals : List<DetectionSignal>
+- contextData : Map<String, String>
+- occurrenceCount : int
 
-    void addSignal(DetectionSignal)
-    void updateStatus(String)
-    void escalate()
++ addSignal(signal : DetectionSignal) : void
++ updateStatus(status : String) : void
++ escalate() : void
 }
 
 class Playbook
 {
-    String playbookID
-    String name
-    String triggerSignal
-    Boolean requiresApproval
-    List<PlaybookStep> steps
+- playbookID : String
+- name : String
+- triggerSignal : String
+- requiresApproval : Boolean
+- steps : List<PlaybookStep>
 
-    List<PlaybookStep> getSteps()
++ getSteps() : List<PlaybookStep>
 }
+
 
 class PlaybookStep
 {
-    int stepOrder
-    String actionType
-    String targetService
-    String command
-    int retryCount
+- stepOrder : int
+- actionType : String
+- targetService : String
+- command : String
+- retryCount : int
 }
 
 class AuditLog
 {
-    String auditID
-    DateTime timestamp
-    String componentName
-    String actionPerformed
-    String outcome
+- auditID : String
+- timestamp : DateTime
+- componentName : String
+- actionPerformed : String
+- outcome : String
 }
 
 Service Classes
 
 class LogIngestionService
 {
-    String sourceType
+- sourceType : String
 
-    void collectLog(String rawLog)
-    void forwardLog(String rawLog)
++ collectLog(rawLog : String) : void
++ forwardLog(rawLog : String) : void
 }
-
 
 class LogProcessingService
 {
-    List<String> parsingRules
+- parsingRules : List<String>
 
-    LogEvent parseLog(String rawLog)
-    LogEvent normalizeLog(LogEvent)
++ parseLog(rawLog : String) : LogEvent
++ normalizeLog(event : LogEvent) : LogEvent
 }
+
 
 class DetectionService
 {
-    RuleEngine rules
-    AnomalyEngine anomalyDetector
+- rules : RuleEngine
+- anomalyDetector : AnomalyEngine
 
-    DetectionSignal analyze(LogEvent)
++ analyze(event : LogEvent) : DetectionSignal
 }
 
 
 class IncidentManagementService
 {
-    Map<String, Incident> incidentStore
+- incidentStore : Map<String, Incident>
 
-    Incident createIncident(DetectionSignal)
-    Incident correlateSignal(DetectionSignal)
-    void closeIncident(String incidentID)
++ createIncident(signal : DetectionSignal) : Incident
++ correlateSignal(signal : DetectionSignal) : Incident
++ closeIncident(incidentID : String) : void
 }
+
 
 class ResponseAutomationEngine
 {
-    Map<String, Playbook> playbooks
+- playbooks : Map<String, Playbook>
 
-    Playbook selectPlaybook(Incident)
-    String decideResponse(Incident)
++ selectPlaybook(incident : Incident) : Playbook
++ decideResponse(incident : Incident) : String
 }
+
 
 
 class ResponseExecutor
 {
-    void executeAction(PlaybookStep)
-    void reportExecutionStatus(String status)
++ executeAction(step : PlaybookStep) : void
++ reportExecutionStatus(status : String) : void
 }
+
 
 class NotificationService
 {
-    void notifyAnalyst(Incident)
-    void sendAlert(String message)
++ notifyAnalyst(incident : Incident) : void
++ sendAlert(message : String) : void
 }
+
 
 
 class AuditService
 {
-    void recordAuditLog(AuditLog)
-    List<AuditLog> generateReport(Incident)
++ recordAuditLog(log : AuditLog) : void
++ generateReport(incident : Incident) : List<AuditLog>
 }
+
 
 Simulation Interfaces
 
 class RuleEngine
 {
-    Boolean matchRule(LogEvent)
++ matchRule(event : LogEvent) : Boolean
 }
 
 class AnomalyEngine
 {
-    Boolean detectAnomaly(LogEvent)
++ detectAnomaly(event : LogEvent) : Boolean
 }
 
-class SystemActuator
+<<interface>> SystemActuator
 {
-    <<Interface>>
-    Boolean performAction(String command, String target)
++ performAction(command : String, target : String) : Boolean
 }
 
 class ServiceRestartActuator
 {
-    Boolean performAction()
-    void restartService(String serviceName)
++ performAction(command : String, target : String) : Boolean
++ restartService(serviceName : String) : void
 }
