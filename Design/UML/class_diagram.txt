@@ -162,3 +162,33 @@ class ServiceRestartActuator
 + performAction(command : String, target : String) : Boolean
 + restartService(serviceName : String) : void
 }
+
+Relationships
+
+LogIngestionService --> LogProcessingService
+LogProcessingService --> LogEvent
+
+DetectionService --> LogEvent
+DetectionService --> DetectionSignal
+DetectionService --> RuleEngine
+DetectionService --> AnomalyEngine
+
+IncidentManagementService --> DetectionSignal
+IncidentManagementService --> Incident
+
+Incident "1" o-- "*" DetectionSignal
+
+ResponseAutomationEngine --> Incident
+ResponseAutomationEngine --> Playbook
+
+Playbook "1" o-- "*" PlaybookStep
+
+ResponseExecutor --> PlaybookStep
+ResponseExecutor --> SystemActuator
+
+ServiceRestartActuator ..|> SystemActuator
+
+NotificationService --> Incident
+
+AuditService --> AuditLog
+AuditService --> Incident
