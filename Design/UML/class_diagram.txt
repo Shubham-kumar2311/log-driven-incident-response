@@ -165,30 +165,74 @@ class ServiceRestartActuator
 
 Relationships
 
-LogIngestionService --> LogProcessingService
-LogProcessingService --> LogEvent
+LogIngestionService → LogProcessingService
+Relationship Type: Association
+Description: LogIngestionService forwards collected logs to LogProcessingService for further processing.
 
-DetectionService --> LogEvent
-DetectionService --> DetectionSignal
-DetectionService --> RuleEngine
-DetectionService --> AnomalyEngine
+LogProcessingService → LogEvent
+Relationship Type: Association
+Description: LogProcessingService creates and processes LogEvent objects without owning their lifecycle.
 
-IncidentManagementService --> DetectionSignal
-IncidentManagementService --> Incident
+DetectionService → LogEvent
+Relationship Type: Association
+Description: DetectionService analyzes LogEvent objects as input for detection logic.
 
-Incident "1" o-- "*" DetectionSignal
+DetectionService → DetectionSignal
+Relationship Type: Association
+Description: DetectionService generates DetectionSignal objects as detection output.
 
-ResponseAutomationEngine --> Incident
-ResponseAutomationEngine --> Playbook
+DetectionService → RuleEngine
+Relationship Type: Association
+Description: DetectionService uses RuleEngine to apply predefined detection rules.
 
-Playbook "1" o-- "*" PlaybookStep
+DetectionService → AnomalyEngine
+Relationship Type: Association
+Description: DetectionService collaborates with AnomalyEngine for anomaly-based detection.
 
-ResponseExecutor --> PlaybookStep
-ResponseExecutor --> SystemActuator
+IncidentManagementService → DetectionSignal
+Relationship Type: Association
+Description: IncidentManagementService consumes DetectionSignal objects for correlation.
+
+IncidentManagementService → Incident
+Relationship Type: Association
+Description: IncidentManagementService creates and manages Incident entities.
+
+Incident (1) o-- DetectionSignal (*)
+Relationship Type: Aggregation
+Description: An Incident groups multiple DetectionSignals, but signals can exist independently.
+
+ResponseAutomationEngine → Incident
+Relationship Type: Association
+Description: ResponseAutomationEngine evaluates Incident data to decide response strategy.
+
+ResponseAutomationEngine → Playbook
+Relationship Type: Association
+Description: ResponseAutomationEngine selects appropriate Playbooks based on incident context.
+
+Playbook (1) o-- PlaybookStep (*)
+Relationship Type: Composition
+Description: PlaybookSteps are tightly bound to a Playbook and cannot exist independently.
+
+ResponseExecutor → PlaybookStep
+Relationship Type: Association
+Description: ResponseExecutor executes individual PlaybookSteps.
+
+ResponseExecutor → SystemActuator
+Relationship Type: Association
+Description: ResponseExecutor uses SystemActuator interface to perform system-level actions.
 
 ServiceRestartActuator ..|> SystemActuator
+Relationship Type: Inheritance (Interface Realization)
+Description: ServiceRestartActuator implements the SystemActuator interface.
 
-NotificationService --> Incident
+NotificationService → Incident
+Relationship Type: Association
+Description: NotificationService accesses Incident data to notify analysts.
 
-AuditService --> AuditLog
-AuditService --> Incident
+AuditService → AuditLog
+Relationship Type: Composition
+Description: AuditLog entries are created and owned by AuditService.
+
+AuditService → Incident
+Relationship Type: Association
+Description: AuditService references Incident data for reporting and compliance auditing.
