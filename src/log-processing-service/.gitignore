@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.env/
+
+# Logs (optional – keep if you want to track logs)
+logs/*.log
+
+# OS / Editor files
+.DS_Store
+Thumbs.db

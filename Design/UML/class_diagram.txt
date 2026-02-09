@@ -1,0 +1,164 @@
+Core Domain Classes
+
+class LogEvent
+{
+- eventID : String
+- serviceName : String
+- timestamp : DateTime
+- logLevel : String
+- message : String
+- rawLog : String
+- parsed : Boolean
+
++ normalize() : void
++ isValid() : Boolean
+}
+
+
+class DetectionSignal
+{
+- signalID : String
+- signalType : String
+- severity : String
+- sourceService : String
+- detectedAt : DateTime
+
++ isCritical() : Boolean
+}
+
+class Incident
+{
+- incidentID : String
+- status : String
+- priority : String
+- relatedSignals : List<DetectionSignal>
+- contextData : Map<String, String>
+- occurrenceCount : int
+
++ addSignal(signal : DetectionSignal) : void
++ updateStatus(status : String) : void
++ escalate() : void
+}
+
+class Playbook
+{
+- playbookID : String
+- name : String
+- triggerSignal : String
+- requiresApproval : Boolean
+- steps : List<PlaybookStep>
+
++ getSteps() : List<PlaybookStep>
+}
+
+
+class PlaybookStep
+{
+- stepOrder : int
+- actionType : String
+- targetService : String
+- command : String
+- retryCount : int
+}
+
+class AuditLog
+{
+- auditID : String
+- timestamp : DateTime
+- componentName : String
+- actionPerformed : String
+- outcome : String
+}
+
+Service Classes
+
+class LogIngestionService
+{
+- sourceType : String
+
++ collectLog(rawLog : String) : void
++ forwardLog(rawLog : String) : void
+}
+
+class LogProcessingService
+{
+- parsingRules : List<String>
+
++ parseLog(rawLog : String) : LogEvent
++ normalizeLog(event : LogEvent) : LogEvent
+}
+
+
+class DetectionService
+{
+- rules : RuleEngine
+- anomalyDetector : AnomalyEngine
+
++ analyze(event : LogEvent) : DetectionSignal
+}
+
+
+class IncidentManagementService
+{
+- incidentStore : Map<String, Incident>
+
++ createIncident(signal : DetectionSignal) : Incident
++ correlateSignal(signal : DetectionSignal) : Incident
++ closeIncident(incidentID : String) : void
+}
+
+
+class ResponseAutomationEngine
+{
+- playbooks : Map<String, Playbook>
+
++ selectPlaybook(incident : Incident) : Playbook
++ decideResponse(incident : Incident) : String
+}
+
+
+
+class ResponseExecutor
+{
++ executeAction(step : PlaybookStep) : void
++ reportExecutionStatus(status : String) : void
+}
+
+
+class NotificationService
+{
++ notifyAnalyst(incident : Incident) : void
++ sendAlert(message : String) : void
+}
+
+
+
+class AuditService
+{
++ recordAuditLog(log : AuditLog) : void
++ generateReport(incident : Incident) : List<AuditLog>
+}
+
+
+Simulation Interfaces
+
+class RuleEngine
+{
++ matchRule(event : LogEvent) : Boolean
+}
+
+class AnomalyEngine
+{
++ detectAnomaly(event : LogEvent) : Boolean
+}
+
+<<interface>> SystemActuator
+{
++ performAction(command : String, target : String) : Boolean
+}
+
+class ServiceRestartActuator
+{
++ performAction(command : String, target : String) : Boolean
++ restartService(serviceName : String) : void
+}
