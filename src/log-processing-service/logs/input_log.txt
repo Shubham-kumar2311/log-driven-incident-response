@@ -1,0 +1,7 @@
+[2026-02-10 09:35:01.933461] Jan 25 auth-service ERROR timeout after 5 retries
+
+[2026-02-10 09:38:27.834467] Feb 10 09:23:24 payment-service WARN retrying request
+[2026-02-10 09:39:01.025286] Jan 25 auth-service ERROR timeout after 5 retries
+[2026-02-10 09:40:27.529285] Feb 10 payment-service INFO request processed successfully
+[2026-02-10 09:43:30.902261]  stdout F ERROR database connection failed
+[2026-02-10 09:45:26.479700] Jan 25 auth-service ERROR timeout after 5 retries
