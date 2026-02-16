@@ -1,1 +1,5 @@
+cd .\src\log-ingestion-service
 python -m uvicorn app:app --reload --port 8000
+
+cd .\src\log-processing-service
+python -m uvicorn app:app --reload --port 8001
