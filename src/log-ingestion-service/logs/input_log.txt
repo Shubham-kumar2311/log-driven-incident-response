@@ -7,3 +7,13 @@
 [2026-02-10 09:40:25.475279] Feb 10 payment-service INFO request processed successfully
 [2026-02-10 09:43:28.853960]  stdout F ERROR database connection failed
 [2026-02-10 09:45:24.440249] Jan 25 auth-service ERROR timeout after 5 retries
+[2026-02-17 09:20:49.314649] auth-service ERROR request processed successfully
+  at java.base/java.lang.Thread.run(Thread.java:829)
+  at java.base/java.lang.Thread.start(Thread.java:748)
+[2026-02-17 09:21:15.305973] payment-service ERROR NullPointerException
+[2026-02-17 09:21:47.046439] auth-service ERROR timeout after 5 retries
+[2026-02-17 09:22:07.727727] 25jan auth-service ERROR timeout after 5 retries
+[2026-02-17 09:22:43.683698] an 25 auth-service ERROR timeout after 5 retries
+[2026-02-17 09:22:53.675222] Jan 25 auth-service ERROR timeout after 5 retries
+[2026-02-17 09:33:26.694807] Aug 16 payment-service ERROR too many requests
+[2026-02-17 09:34:11.573894] Aug 16 payment-service FAILED too many requests

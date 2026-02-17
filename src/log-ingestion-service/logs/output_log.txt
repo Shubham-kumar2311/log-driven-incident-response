@@ -4,3 +4,11 @@
 [2026-02-10 09:40:27.533650] {"parsed":true,"serviceName":"payment-service","logLevel":"INFO","message":"request processed successfully","timestamp":"2026-02-10T04:10:27.529606","raw":"Feb 10 payment-service INFO request processed successfully","eventID":"0622e837-c7d1-4ce8-b4fe-435f23d4f91e"}
 [2026-02-10 09:43:30.905508] {"parsed":false,"raw":" stdout F ERROR database connection failed"}
 [2026-02-10 09:45:26.483196] {"parsed":true,"serviceName":"auth-service","logLevel":"ERROR","message":"timeout after 5 retries","timestamp":"2026-02-10T04:15:26.479900","raw":"Jan 25 auth-service ERROR timeout after 5 retries","eventID":"5cc4ed87-3e7b-4365-a626-d8f2d56174e6"}
+[2026-02-17 09:20:51.426105] {"parsed":false,"raw":"auth-service ERROR request processed successfully\n  at java.base/java.lang.Thread.run(Thread.java:829)\n  at java.base/java.lang.Thread.start(Thread.java:748)"}
+[2026-02-17 09:21:17.355737] {"parsed":false,"raw":"payment-service ERROR NullPointerException"}
+[2026-02-17 09:21:49.068685] {"parsed":false,"raw":"auth-service ERROR timeout after 5 retries"}
+[2026-02-17 09:22:09.793184] {"parsed":false,"raw":"25jan auth-service ERROR timeout after 5 retries"}
+[2026-02-17 09:22:45.735029] {"parsed":true,"serviceName":"auth-service","logLevel":"ERROR","message":"timeout after 5 retries","timestamp":"2026-02-17T03:52:45.731341","raw":"an 25 auth-service ERROR timeout after 5 retries","eventID":"491fe439-591f-472b-848a-f00d8cbd2c44"}
+[2026-02-17 09:22:55.725977] {"parsed":true,"serviceName":"auth-service","logLevel":"ERROR","message":"timeout after 5 retries","timestamp":"2026-02-17T03:52:55.724108","raw":"Jan 25 auth-service ERROR timeout after 5 retries","eventID":"d97e45c6-50b8-4ddd-8006-b3442c325c0f"}
+[2026-02-17 09:33:28.777264] {"parsed":true,"serviceName":"payment-service","logLevel":"ERROR","message":"too many requests","timestamp":"2026-02-17T04:03:28.765304","raw":"Aug 16 payment-service ERROR too many requests","eventID":"9bc17347-7a96-4585-9c15-3b79639580c9"}
+[2026-02-17 09:34:13.630984] {"parsed":true,"serviceName":"payment-service","logLevel":"FAILED","message":"too many requests","timestamp":"2026-02-17T04:04:13.628864","raw":"Aug 16 payment-service FAILED too many requests","eventID":"3d32c33c-cdc7-40ae-b0ea-574507babde1"}

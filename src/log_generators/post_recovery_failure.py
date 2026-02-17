@@ -1,11 +1,9 @@
 import time
-from datetime import datetime
 
 service = "auth-service"
 
 def log(level, msg):
-    ts = datetime.now().strftime("%b %d %H:%M:%S")
-    line = f"{ts} {service} {level} {msg}"
+    line = f"{service} {level} {msg}"
     print(line)
     with open("app.log", "a") as f:
         f.write(line + "\n")

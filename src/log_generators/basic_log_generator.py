@@ -1,6 +1,5 @@
 import random
 import time
-from datetime import datetime
 
 services = ["auth-service", "payment-service", "order-service"]
 levels = ["INFO", "WARN", "ERROR"]
@@ -23,15 +22,19 @@ messages = {
 }
 
 def generate_log():
-    ts = datetime.now().strftime("%b %d %H:%M:%S")
     service = random.choice(services)
     level = random.choices(levels, weights=[0.6, 0.25, 0.15])[0]
     msg = random.choice(messages[level])
-    return f"{ts} {service} {level} {msg}"
+    return f"{service} {level} {msg}"
 
-with open("app.log", "a") as f:
-    while True:
-        log = generate_log()
-        print(log)
-        f.write(log + "\n")
-        time.sleep(0.5)
+def main(count: int = 5):
+    with open("app.log", "a") as f:
+        for _ in range(count):
+            log = generate_log()
+            print(log)
+            f.write(log + "\n")
+            time.sleep(0.5)
+
+
+if __name__ == "__main__":
+    main(5)

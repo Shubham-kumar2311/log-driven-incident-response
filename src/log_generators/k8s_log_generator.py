@@ -1,6 +1,5 @@
 import random
 import time
-from datetime import datetime
 
 levels = ["stdout", "stderr"]
 messages = [
@@ -9,12 +8,17 @@ messages = [
     "Service started successfully"
 ]
 
-while True:
-    ts = datetime.utcnow().isoformat() + "Z"
-    stream = random.choice(levels)
-    msg = random.choice(messages)
-    log = f"{ts} {stream} F {msg}"
-    print(log)
-    with open("k8s.log", "a") as f:
-        f.write(log + "\n")
-    time.sleep(0.7)
+
+def main(count: int = 5):
+    with open("app.log", "a") as f:
+        for _ in range(count):
+            stream = random.choice(levels)
+            msg = random.choice(messages)
+            log = f"{stream} F {msg}"
+            print(log)
+            f.write(log + "\n")
+            time.sleep(0.2)
+
+
+if __name__ == "__main__":
+    main(5)
