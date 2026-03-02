@@ -44,6 +44,16 @@ def main():
         )
     )
 
+    playbook.add_step(
+        PlaybookStep(
+            step_id="3",
+            action_type="email",
+            target="phishing_mail_id",
+            command="delete_email",
+            retry_count=1
+        )
+    )
+
     result = engine.execute(playbook, incident_id="INC-001")
 
     print("\nFinal Execution Result:")
