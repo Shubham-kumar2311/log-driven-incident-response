@@ -1,0 +1,9 @@
+cd src/log_generators
+python run_all_generators.py
+
+cd src/log_ingestion_service
+uvicorn app:app --reload --port 8001
+
+
+cd src/log_processing_service
+uvicorn app:app --reload --port 8002

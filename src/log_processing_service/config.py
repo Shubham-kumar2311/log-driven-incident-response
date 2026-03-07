@@ -1,0 +1,1 @@
+POLL_INTERVAL = 0.1
