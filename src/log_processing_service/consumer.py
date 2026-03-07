@@ -2,33 +2,43 @@ import redis
 import json
 from pipeline import ProcessingPipeline
 
-redis_client = redis.Redis(host="localhost", port=6379)
 
-pipeline = ProcessingPipeline()
+class ProcessingConsumer:
 
-last_id = "0"
+    def __init__(self):
 
+        self.redis_client = redis.Redis(host="localhost", port=6379)
 
-def consume():
+        self.pipeline = ProcessingPipeline()
 
-    global last_id
+        self.last_id = "0"
 
-    while True:
+    def run(self):
 
-        messages = redis_client.xread(
-            {"raw_logs": last_id},
-            block=5000
-        )
+        print("Processing consumer started")
 
-        for stream, events in messages:
+        while True:
 
-            for msg_id, data in events:
+            messages = self.redis_client.xread(
+                {"raw_logs": self.last_id},
+                block=5000
+            )
 
-                event = json.loads(data[b"data"])
+            for stream, events in messages:
 
-                processed = pipeline.process(event)
+                for msg_id, data in events:
 
-                if processed:
-                    print("Processed:", processed)
+                    try:
 
-                last_id = msg_id
+                        event = json.loads(data[b"data"])
+
+                        processed = self.pipeline.process(event)
+
+                        if processed:
+                            print("Processed:", processed)
+
+                    except Exception as e:
+
+                        print("Processing error:", e)
+
+                    self.last_id = msg_id
