@@ -1,21 +1,33 @@
 import redis
 import json
+
 from pipeline import ProcessingPipeline
+from config import USE_REDIS, REDIS_HOST, REDIS_PORT
 
 
 class ProcessingConsumer:
 
     def __init__(self):
 
-        self.redis_client = redis.Redis(host="localhost", port=6379)
-
         self.pipeline = ProcessingPipeline()
 
         self.last_id = "0"
 
+        if USE_REDIS:
+            self.redis_client = redis.Redis(
+                host=REDIS_HOST,
+                port=REDIS_PORT
+            )
+        else:
+            self.redis_client = None
+
     def run(self):
 
-        print("Processing consumer started")
+        if not USE_REDIS:
+            print("Redis disabled — API mode active")
+            return
+
+        print("Processing consumer started (Redis mode)")
 
         while True:
 

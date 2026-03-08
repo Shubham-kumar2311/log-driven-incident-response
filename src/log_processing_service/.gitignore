@@ -6,6 +6,7 @@ __pycache__/
 # Virtual environments
 venv/
 .env/
+.env
 
 # Logs (optional – keep if you want to track logs)
 logs/*.log

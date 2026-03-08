@@ -2,8 +2,14 @@ cd src/log_generators
 python run_all_generators.py
 
 cd src/log_ingestion_service
-uvicorn app:app --reload --port 8001
+python -m uvicorn app:app --reload --port 8001
 
 
 cd src/log_processing_service
-uvicorn app:app --reload --port 8002
+python -m uvicorn app:app --reload --port 8002
+
+cd src/detection_service
+python -m uvicorn app:app --reload --port 8003
+
+cd src/notification_service
+python -m uvicorn app:app --reload --port 8004

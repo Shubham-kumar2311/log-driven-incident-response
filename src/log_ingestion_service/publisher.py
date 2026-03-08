@@ -1,25 +1,38 @@
-import redis
 import json
-import os
+import requests
+import redis
 
-REDIS_ENABLED = os.getenv("USE_REDIS", "true") == "true"
-
-if REDIS_ENABLED:
-    redis_client = redis.Redis(host="localhost", port=6379)
+from config import USE_REDIS, REDIS_HOST, REDIS_PORT, PROCESS_API
 
 
-def publish_event(event):
+redis_client = None
 
-    if REDIS_ENABLED:
+if USE_REDIS:
+    redis_client = redis.Redis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        decode_responses=True
+    )
 
-        redis_client.xadd(
-            "raw_logs",
-            {"data": json.dumps(event)}
-        )
 
-    else:
-        import requests
-        requests.post(
-            "http://localhost:8002/process",
-            json=event
-        )
+def publish_event(event: dict):
+
+    try:
+
+        if USE_REDIS and redis_client:
+
+            redis_client.xadd(
+                "raw_logs",
+                {"data": json.dumps(event)}
+            )
+
+        else:
+
+            requests.post(
+                PROCESS_API,
+                json=event,
+                timeout=2
+            )
+
+    except Exception as e:
+        print(f"[PUBLISH ERROR] {e}")
