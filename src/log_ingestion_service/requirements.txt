@@ -1,3 +1,6 @@
 fastapi
-uvicorn
+uvicorn[standard]
 requests
+redis
+python-dotenv
+pydantic
