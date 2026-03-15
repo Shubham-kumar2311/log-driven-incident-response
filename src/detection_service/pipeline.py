@@ -42,6 +42,15 @@ class DetectionPipeline:
 
         all_signals = rule_signals + anomaly_signals
 
+        # Enrich every signal with context from the originating event
+        for sig in all_signals:
+            sig["event_id"] = event.get("event_id", "")
+            sig["event_type"] = event.get("event_type", "")
+            sig["affected_service"] = event.get("service_name", "")
+            sig["environment"] = event.get("environment", "")
+            sig["region"] = event.get("region", "")
+            sig["risk_score"] = event.get("risk_score", 0.0)
+
         if all_signals:
             logger.info(
                 "Detection complete: %d rule signals, %d anomaly signals",
