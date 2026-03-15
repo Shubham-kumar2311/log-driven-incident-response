@@ -1,0 +1,11 @@
+{
+  "DB_SLOW_QUERY": {
+    "action": "restart_database"
+  },
+  "HTTP_ERROR_RATE": {
+    "action": "restart_http_service"
+  },
+  "AUTH_FAILURE_SPIKE": {
+    "action": "lock_accounts"
+  }
+}
