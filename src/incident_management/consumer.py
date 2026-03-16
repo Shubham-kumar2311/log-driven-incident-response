@@ -1,43 +1,83 @@
-import redis
 import json
-from config import REDIS_HOST, REDIS_PORT, DETECTION_CHANNEL
-from services.incident_service import IncidentService
-from publisher import IncidentPublisher
+import logging
+import time
+
+import redis
+
+from config import (
+    CONSUMER_GROUP,
+    CONSUMER_NAME,
+    INPUT_STREAM,
+    REDIS_HOST,
+    REDIS_PORT,
+)
+from metrics import metrics
+from pipeline import IncidentPipeline
+
+logger = logging.getLogger("incident.consumer")
+
+BACKOFF_BASE = 1
+BACKOFF_MAX = 30
 
 
 class DetectionConsumer:
 
     def __init__(self):
-
         self.redis = redis.Redis(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            decode_responses=True
+            host=REDIS_HOST, port=REDIS_PORT, decode_responses=False
         )
+        self.pipeline = IncidentPipeline()
+        self._ensure_consumer_group()
 
-        self.service = IncidentService()
-        self.publisher = IncidentPublisher()
+    def _ensure_consumer_group(self) -> None:
+        try:
+            self.redis.xgroup_create(INPUT_STREAM, CONSUMER_GROUP, id="0", mkstream=True)
+            logger.info("Created consumer group '%s' on stream '%s'", CONSUMER_GROUP, INPUT_STREAM)
+        except redis.ResponseError as e:
+            if "BUSYGROUP" in str(e):
+                logger.info("Consumer group '%s' already exists", CONSUMER_GROUP)
+            else:
+                raise
 
-    def start(self):
+    def run(self) -> None:
+        logger.info(
+            "Incident consumer started (group=%s, name=%s, stream=%s)",
+            CONSUMER_GROUP, CONSUMER_NAME, INPUT_STREAM,
+        )
+        backoff = BACKOFF_BASE
 
-        pubsub = self.redis.pubsub()
+        while True:
+            try:
+                messages = self.redis.xreadgroup(
+                    CONSUMER_GROUP,
+                    CONSUMER_NAME,
+                    {INPUT_STREAM: ">"},
+                    count=50,
+                    block=5000,
+                )
 
-        pubsub.subscribe(DETECTION_CHANNEL)
+                if not messages:
+                    continue
 
-        print("Incident Service listening for detection signals...")
+                backoff = BACKOFF_BASE
 
-        for message in pubsub.listen():
+                for stream, events in messages:
+                    for msg_id, data in events:
+                        try:
+                            signal = json.loads(data[b"data"])
+                            self.pipeline.process(signal)
+                            self.redis.xack(INPUT_STREAM, CONSUMER_GROUP, msg_id)
+                        except (json.JSONDecodeError, KeyError):
+                            logger.warning("Malformed message %s, acknowledging and skipping", msg_id)
+                            self.redis.xack(INPUT_STREAM, CONSUMER_GROUP, msg_id)
+                        except Exception:
+                            logger.exception("Error processing message %s", msg_id)
 
-            if message["type"] != "message":
-                continue
-
-            data = json.loads(message["data"])
-
-            service = data.get("service")
-            error = data.get("error")
-
-            incident = self.service.create_incident(service, error)
-
-            self.publisher.publish(incident)
-
-            print("Incident created:", incident)
+            except redis.ConnectionError:
+                logger.error("Redis connection lost, retrying in %ds", backoff)
+                time.sleep(backoff)
+                backoff = min(backoff * 2, BACKOFF_MAX)
+            except Exception:
+                logger.exception("Unexpected error in consumer loop, retrying in %ds", backoff)
+                time.sleep(backoff)
+                backoff = min(backoff * 2, BACKOFF_MAX)

@@ -1,2 +1,6 @@
-flask
+fastapi
+uvicorn
 redis
+requests
+python-dotenv
+pymongo
