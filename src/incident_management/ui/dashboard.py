@@ -13,18 +13,27 @@ DASHBOARD_HTML = r"""
     }
 
     :root {
-      --bg: #0f1117;
+      --bg: #0d1117;
       --surface: #161b22;
       --surface2: #1c2333;
+      --surface3: #21293a;
       --border: #30363d;
-      --text: #e1e4e8;
+      --border-light: #3d444d;
+      --text: #e6edf3;
       --text2: #8b949e;
+      --text3: #6e7681;
       --accent: #58a6ff;
+      --accent-dim: rgba(88, 166, 255, 0.15);
       --green: #3fb950;
+      --green-dim: rgba(63, 185, 80, 0.15);
       --yellow: #d29922;
+      --yellow-dim: rgba(210, 153, 34, 0.15);
       --red: #f85149;
+      --red-dim: rgba(248, 81, 73, 0.15);
       --orange: #db6d28;
+      --orange-dim: rgba(219, 109, 40, 0.15);
       --purple: #bc8cff;
+      --purple-dim: rgba(188, 140, 255, 0.15);
     }
 
     body {
@@ -40,6 +49,12 @@ DASHBOARD_HTML = r"""
       text-decoration: none;
     }
 
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
     /* ── Header ── */
     .header {
       background: var(--surface);
@@ -53,8 +68,27 @@ DASHBOARD_HTML = r"""
       z-index: 100;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: white;
+    }
+
     .header h1 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
     }
 
@@ -71,6 +105,12 @@ DASHBOARD_HTML = r"""
       height: 8px;
       border-radius: 50%;
       background: var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
     }
 
     /* ── Layout ── */
@@ -102,9 +142,16 @@ DASHBOARD_HTML = r"""
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 5px 8px;
-      border-radius: 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
       font-size: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .filters select:focus,
+    .filters input:focus {
+      border-color: var(--accent);
+      outline: none;
     }
 
     .filters select {
@@ -119,15 +166,20 @@ DASHBOARD_HTML = r"""
     }
 
     .incident-item {
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
     }
 
-    .incident-item:hover,
+    .incident-item:hover {
+      background: var(--surface2);
+    }
+
     .incident-item.active {
       background: var(--surface2);
+      border-left-color: var(--accent);
     }
 
     .incident-item .top {
@@ -145,18 +197,18 @@ DASHBOARD_HTML = r"""
 
     .incident-item .sev {
       font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 3px;
+      padding: 2px 8px;
+      border-radius: 10px;
       font-weight: 600;
       text-transform: uppercase;
     }
 
     /* ── Severity colours ── */
-    .sev-critical  { background: rgba(248, 81,  73,  0.20); color: var(--red);    }
-    .sev-high      { background: rgba(219,109,  40,  0.20); color: var(--orange); }
-    .sev-medium    { background: rgba(210,153,  34,  0.20); color: var(--yellow); }
-    .sev-low       { background: rgba( 63,185,  80,  0.15); color: var(--green);  }
-    .sev-info      { background: rgba( 88,166, 255,  0.15); color: var(--accent); }
+    .sev-critical  { background: var(--red-dim);    color: var(--red);    }
+    .sev-high      { background: var(--orange-dim);  color: var(--orange); }
+    .sev-medium    { background: var(--yellow-dim);  color: var(--yellow); }
+    .sev-low       { background: var(--green-dim);   color: var(--green);  }
+    .sev-info      { background: var(--accent-dim);  color: var(--accent); }
 
     .incident-item .desc {
       font-size: 12px;
@@ -169,18 +221,26 @@ DASHBOARD_HTML = r"""
     .incident-item .meta {
       font-size: 11px;
       color: var(--text2);
-      margin-top: 4px;
+      margin-top: 6px;
       display: flex;
       gap: 10px;
+      align-items: center;
     }
 
     /* ── Status badges ── */
-    .stat-badge         { font-size: 11px; padding: 1px 6px; border-radius: 3px; font-weight: 500; }
-    .stat-open          { background: rgba( 63,185, 80,  0.15); color: var(--green);  }
-    .stat-investigating { background: rgba( 88,166,255,  0.15); color: var(--accent); }
-    .stat-mitigated     { background: rgba(210,153, 34,  0.15); color: var(--yellow); }
-    .stat-resolved      { background: rgba(188,140,255,  0.15); color: var(--purple); }
-    .stat-closed        { background: rgba(139,148,158,  0.15); color: var(--text2);  }
+    .stat-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .stat-open          { background: var(--green-dim);  color: var(--green);  }
+    .stat-investigating { background: var(--accent-dim); color: var(--accent); }
+    .stat-mitigated     { background: var(--yellow-dim); color: var(--yellow); }
+    .stat-resolved      { background: var(--purple-dim); color: var(--purple); }
+    .stat-closed        { background: rgba(139,148,158,0.15); color: var(--text2); }
 
     /* ── Main panel ── */
     .main {
@@ -191,65 +251,119 @@ DASHBOARD_HTML = r"""
 
     .empty-state {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
       color: var(--text2);
       font-size: 14px;
+      gap: 12px;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      opacity: 0.3;
     }
 
     /* ── Detail view ── */
     .detail {
-      padding: 20px 24px;
+      padding: 24px 28px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .detail-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
     .detail-header h2 {
       font-size: 18px;
       font-weight: 600;
+      font-family: monospace;
+      color: var(--accent);
     }
 
-    .detail-header .actions {
+    .detail-header .subtitle {
+      color: var(--text2);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .detail-header .badges {
       display: flex;
       gap: 8px;
     }
 
+    .detail-badge {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      transition: all 0.3s ease;
+    }
+
     /* ── Buttons ── */
     .btn {
-      padding: 6px 14px;
-      border-radius: 5px;
+      padding: 7px 16px;
+      border-radius: 6px;
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--text);
       font-size: 12px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.2s ease;
+      font-weight: 500;
     }
 
     .btn:hover {
-      background: var(--border);
+      background: var(--surface3);
+      border-color: var(--border-light);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
     }
 
     .btn-primary {
       background: rgba(88, 166, 255, 0.15);
-      border-color: var(--accent);
+      border-color: rgba(88, 166, 255, 0.4);
       color: var(--accent);
     }
 
     .btn-primary:hover {
       background: rgba(88, 166, 255, 0.25);
+      border-color: var(--accent);
+    }
+
+    .btn-success {
+      background: rgba(63, 185, 80, 0.15);
+      border-color: rgba(63, 185, 80, 0.4);
+      color: var(--green);
+    }
+
+    .btn-success:hover {
+      background: rgba(63, 185, 80, 0.25);
+      border-color: var(--green);
     }
 
     .btn-danger {
-      background: rgba(248, 81, 73, 0.10);
-      border-color: var(--red);
+      background: var(--red-dim);
+      border-color: rgba(248, 81, 73, 0.4);
       color: var(--red);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     /* ── Info grid ── */
@@ -257,22 +371,23 @@ DASHBOARD_HTML = r"""
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .info-card {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 14px;
+      border-radius: 8px;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
     }
 
     .info-card .label {
       font-size: 11px;
-      color: var(--text2);
+      color: var(--text3);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .info-card .value {
@@ -280,29 +395,85 @@ DASHBOARD_HTML = r"""
       font-weight: 600;
     }
 
+    /* ── Action row ── */
+    .action-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .action-group {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .action-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .action-group .form-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-group select,
+    .action-group input {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .action-group select:focus,
+    .action-group input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
     /* ── Tabs ── */
     .tabs {
       display: flex;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
       margin-bottom: 16px;
+      gap: 4px;
     }
 
     .tab {
-      padding: 8px 16px;
+      padding: 10px 18px;
       font-size: 13px;
       cursor: pointer;
       border-bottom: 2px solid transparent;
       color: var(--text2);
-      transition: all 0.15s;
+      transition: all 0.2s ease;
+      margin-bottom: -2px;
+      border-radius: 6px 6px 0 0;
+      font-weight: 500;
     }
 
     .tab:hover {
       color: var(--text);
+      background: var(--surface2);
     }
 
     .tab.active {
       color: var(--accent);
       border-bottom-color: var(--accent);
+      background: transparent;
     }
 
     .tab-content {
@@ -311,18 +482,27 @@ DASHBOARD_HTML = r"""
 
     .tab-content.active {
       display: block;
+      animation: fadeIn 0.2s ease;
     }
 
     /* ── Timeline ── */
     .timeline-item {
       display: flex;
-      gap: 12px;
-      padding: 8px 0;
+      gap: 14px;
+      padding: 10px 0;
       border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
     }
 
     .timeline-item:last-child {
       border-bottom: none;
+    }
+
+    .timeline-item:hover {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding-left: 8px;
+      margin-left: -8px;
     }
 
     .tl-dot {
@@ -330,25 +510,33 @@ DASHBOARD_HTML = r"""
       height: 10px;
       border-radius: 50%;
       background: var(--accent);
-      margin-top: 5px;
+      margin-top: 6px;
       flex-shrink: 0;
+      transition: transform 0.2s;
     }
 
-    .tl-dot.created  { background: var(--green);  }
-    .tl-dot.status   { background: var(--yellow); }
-    .tl-dot.signal   { background: var(--purple); }
-    .tl-dot.note     { background: var(--orange); }
-    .tl-dot.response { background: var(--red);    }
+    .timeline-item:hover .tl-dot {
+      transform: scale(1.3);
+    }
 
-    .timeline-item .tl-time  { font-size: 11px; color: var(--text2); }
+    .tl-dot.created   { background: var(--green);  }
+    .tl-dot.status    { background: var(--yellow); }
+    .tl-dot.signal    { background: var(--purple); }
+    .tl-dot.note      { background: var(--orange); }
+    .tl-dot.response  { background: var(--red);    }
+    .tl-dot.assigned  { background: var(--accent); }
+    .tl-dot.severity  { background: var(--red);    }
+
+    .timeline-item .tl-time  { font-size: 11px; color: var(--text3); }
     .timeline-item .tl-desc  { font-size: 13px; }
-    .timeline-item .tl-actor { font-size: 11px; color: var(--text2); }
+    .timeline-item .tl-actor { font-size: 11px; color: var(--text2); font-style: italic; }
 
     /* ── Notes ── */
     .note-form {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      align-items: flex-end;
     }
 
     .note-form input,
@@ -356,39 +544,61 @@ DASHBOARD_HTML = r"""
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 6px 10px;
-      border-radius: 4px;
+      padding: 8px 12px;
+      border-radius: 6px;
       font-size: 13px;
       font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .note-form input:focus,
+    .note-form textarea:focus {
+      border-color: var(--accent);
+      outline: none;
     }
 
     .note-form textarea {
       flex: 1;
       resize: vertical;
-      min-height: 36px;
+      min-height: 40px;
     }
 
     .note-item {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 12px 16px;
       margin-bottom: 8px;
+      transition: border-color 0.2s;
     }
 
-    .note-item .note-meta { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
-    .note-item .note-body { font-size: 13px; }
+    .note-item:hover {
+      border-color: var(--border-light);
+    }
+
+    .note-item .note-meta { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+    .note-item .note-body { font-size: 13px; line-height: 1.6; }
 
     /* ── Signals ── */
     .signal-list {
-      font-size: 12px;
-      font-family: monospace;
-      color: var(--text2);
-      line-height: 1.8;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .signal-list span {
+    .signal-item {
+      font-size: 12px;
+      font-family: monospace;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       color: var(--accent);
+      transition: border-color 0.2s;
+    }
+
+    .signal-item:hover {
+      border-color: var(--accent);
     }
 
     /* ── Metrics bar ── */
@@ -396,50 +606,149 @@ DASHBOARD_HTML = r"""
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 8px;
-      padding: 10px 12px;
+      padding: 10px 16px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
     }
 
-    .metric { text-align: center; }
+    .metric {
+      text-align: center;
+      padding: 4px 0;
+    }
 
     .metric .mv {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: var(--accent);
+      transition: all 0.3s ease;
     }
 
     .metric .ml {
       font-size: 10px;
-      color: var(--text2);
+      color: var(--text3);
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    /* ── Inline forms ── */
-    .assign-form,
-    .status-form {
+    /* ── Toast notifications ── */
+    .toast-container {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      z-index: 10000;
       display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-top: 8px;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .assign-form input {
+    .toast {
       background: var(--surface2);
       border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px 12px 16px;
+      font-size: 13px;
       color: var(--text);
-      padding: 5px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      width: 140px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transform: translateX(120%);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 380px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toast-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .toast-success {
+      border-left: 4px solid var(--green);
+      background: linear-gradient(135deg, rgba(63, 185, 80, 0.1), var(--surface2));
+    }
+
+    .toast-error {
+      border-left: 4px solid var(--red);
+      background: linear-gradient(135deg, rgba(248, 81, 73, 0.1), var(--surface2));
+    }
+
+    .toast-info {
+      border-left: 4px solid var(--accent);
+      background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), var(--surface2));
+    }
+
+    /* ── Flash animation for updates ── */
+    @keyframes flashSuccess {
+      0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.5); }
+      50% { box-shadow: 0 0 12px 4px rgba(63, 185, 80, 0.3); }
+      100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
+    }
+
+    @keyframes flashAccent {
+      0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.5); }
+      50% { box-shadow: 0 0 12px 4px rgba(88, 166, 255, 0.3); }
+      100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); }
+    }
+
+    .flash-success {
+      animation: flashSuccess 0.8s ease;
+    }
+
+    .flash-accent {
+      animation: flashAccent 0.8s ease;
+    }
+
+    /* ── Spinner for loading ── */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Sidebar updated indicator ── */
+    @keyframes sidebarFlash {
+      0% { background: rgba(63, 185, 80, 0.15); }
+      100% { background: transparent; }
+    }
+
+    .sidebar-updated {
+      animation: sidebarFlash 1.5s ease;
+    }
+
+    /* ── Empty list ── */
+    .no-items {
+      color: var(--text3);
+      font-size: 13px;
+      padding: 16px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
 <!-- ═══════════════════════════ Header ═══════════════════════════ -->
 <div class="header">
-  <h1>Incident Management Dashboard</h1>
+  <div class="header-left">
+    <div class="header-logo">IM</div>
+    <h1>Incident Management</h1>
+  </div>
   <div class="status">
     <div class="dot"></div>
     <span id="hdr-status">Connecting...</span>
@@ -483,7 +792,10 @@ DASHBOARD_HTML = r"""
 
   <!-- Main panel -->
   <div class="main" id="main-panel">
-    <div class="empty-state" id="empty-state">Select an incident to view details</div>
+    <div class="empty-state" id="empty-state">
+      <div class="empty-state-icon">&#9432;</div>
+      <div>Select an incident to view details</div>
+    </div>
     <div class="detail" id="detail-panel" style="display:none"></div>
   </div>
 
@@ -491,58 +803,75 @@ DASHBOARD_HTML = r"""
 
 <script>
   /* ─────────────────────────── State ─────────────────────────── */
-  const API = '';           // Base URL; empty = same origin
+  const API = '';
   let incidents  = [];
-  let selected   = null;    // Currently selected incident ID
+  let selected   = null;
+  let actionInProgress = false;   // lock to prevent poll from rebuilding detail during actions
+
+  /* ─────────────────────────── Toast system ─────────────────────────── */
+
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    const icons = { success: '\u2713', error: '\u2717', info: '\u2139' };
+    toast.className = 'toast toast-' + type;
+    toast.innerHTML = '<span class="toast-icon">' + (icons[type] || icons.info) +
+                      '</span><span>' + esc(message) + '</span>';
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => toast.classList.add('show'));
+    });
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 350);
+    }, 3500);
+  }
 
   /* ─────────────────────────── Helpers ─────────────────────────── */
 
-  /**
-   * Fetch JSON from the API.
-   * @param {string} url - Path relative to API base.
-   * @param {RequestInit} [opts] - Optional fetch options.
-   * @returns {Promise<any>}
-   */
   async function fetchJSON(url, opts) {
     const response = await fetch(API + url, opts);
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      let errMsg = response.statusText;
+      try {
+        const body = await response.json();
+        if (body.detail) errMsg = body.detail;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
     return response.json();
   }
 
-  /**
-   * Escape a string for safe HTML insertion.
-   * @param {string} s
-   * @returns {string}
-   */
   function esc(s) {
-    if (!s) return '';
+    if (s === null || s === undefined) return '';
     const div = document.createElement('div');
-    div.textContent = s;
+    div.textContent = String(s);
     return div.innerHTML;
   }
 
-  /**
-   * Return the CSS modifier class for a timeline dot based on event type.
-   * @param {string} eventType
-   * @returns {string}
-   */
   function tlDotClass(eventType) {
     if (eventType.includes('created'))  return 'created';
     if (eventType.includes('status'))   return 'status';
     if (eventType.includes('signal'))   return 'signal';
     if (eventType.includes('note'))     return 'note';
     if (eventType.includes('response')) return 'response';
+    if (eventType.includes('assign'))   return 'assigned';
+    if (eventType.includes('severity')) return 'severity';
     return '';
+  }
+
+  function flashElement(el, cls) {
+    if (!el) return;
+    el.classList.remove(cls);
+    void el.offsetWidth;   // force reflow
+    el.classList.add(cls);
+    setTimeout(() => el.classList.remove(cls), 1000);
   }
 
   /* ─────────────────────────── Polling ─────────────────────────── */
 
-  /**
-   * Poll the server for the latest incidents and metrics, then refresh the UI.
-   */
   async function poll() {
     try {
-      // Build query string from active filters
       const params = new URLSearchParams();
       const statusVal   = document.getElementById('f-status').value;
       const severityVal = document.getElementById('f-severity').value;
@@ -552,64 +881,74 @@ DASHBOARD_HTML = r"""
       if (severityVal) params.set('severity',          severityVal);
       if (serviceVal)  params.set('affected_service',  serviceVal);
 
-      // Fetch incidents
       const data = await fetchJSON('/incidents?' + params);
       incidents = data.incidents || [];
 
-      // Sort newest first
       incidents.sort((a, b) =>
         (b.created_at || '').localeCompare(a.created_at || '')
       );
 
       renderList();
 
-      // Refresh detail panel if an incident is already selected
-      if (selected) await loadDetail(selected);
+      // Only auto-refresh detail panel if NO action is in progress
+      // This prevents destroying user's form input (dropdown, text fields)
+      if (selected && !actionInProgress) {
+        await refreshDetail(selected);
+      }
 
-      // Fetch and render metrics
+      // Metrics
       const metrics = await fetchJSON('/metrics');
-      document.getElementById('m-signals').textContent = metrics.signals_received  || 0;
-      document.getElementById('m-created').textContent = metrics.incidents_created || 0;
-      document.getElementById('m-updated').textContent = metrics.incidents_updated || 0;
-      document.getElementById('m-active').textContent  = incidents.filter(
+      updateMetric('m-signals', metrics.signals_received  || 0);
+      updateMetric('m-created', metrics.incidents_created || 0);
+      updateMetric('m-updated', metrics.incidents_updated || 0);
+      updateMetric('m-active', incidents.filter(
         i => ['open', 'investigating', 'mitigated'].includes(i.status)
-      ).length;
-      document.getElementById('m-rate').textContent = metrics.signals_per_second || 0;
+      ).length);
+      updateMetric('m-rate', metrics.signals_per_second || 0);
 
       document.getElementById('hdr-status').textContent =
-        'Live — ' + incidents.length + ' incidents';
+        'Live \u2014 ' + incidents.length + ' incident' + (incidents.length !== 1 ? 's' : '');
 
     } catch (err) {
       document.getElementById('hdr-status').textContent = 'Error: ' + err.message;
     }
   }
 
+  function updateMetric(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const old = el.textContent;
+    el.textContent = value;
+    if (old !== String(value)) {
+      flashElement(el, 'flash-accent');
+    }
+  }
+
   /* ─────────────────────────── Sidebar list ─────────────────────────── */
 
-  /** Render the incident list in the sidebar. */
   function renderList() {
     const el = document.getElementById('incident-list');
+    if (!incidents.length) {
+      el.innerHTML = '<div class="no-items">No incidents found</div>';
+      return;
+    }
     el.innerHTML = incidents.map(i => `
       <div class="incident-item ${selected === i.incident_id ? 'active' : ''}"
            onclick="selectIncident('${i.incident_id}')">
         <div class="top">
-          <span class="id">${i.incident_id}</span>
-          <span class="sev sev-${i.severity}">${i.severity}</span>
+          <span class="id">${esc(i.incident_id)}</span>
+          <span class="sev sev-${i.severity}">${esc(i.severity)}</span>
         </div>
-        <div class="desc">${esc(i.description || '—')}</div>
+        <div class="desc">${esc(i.description || '\u2014')}</div>
         <div class="meta">
-          <span class="stat-badge stat-${i.status}">${i.status}</span>
+          <span class="stat-badge stat-${i.status}">${esc(i.status)}</span>
           <span>${i.signal_count || 0} signals</span>
-          <span>${i.affected_service || '—'}</span>
+          <span>${esc(i.affected_service || '\u2014')}</span>
         </div>
       </div>
     `).join('');
   }
 
-  /**
-   * Select an incident by ID, highlight it in the list, and load its detail.
-   * @param {string} id
-   */
   function selectIncident(id) {
     selected = id;
     renderList();
@@ -618,142 +957,25 @@ DASHBOARD_HTML = r"""
 
   /* ─────────────────────────── Detail panel ─────────────────────────── */
 
-  /**
-   * Fetch full details for an incident and render the detail panel.
-   * @param {string} id
-   */
+  // Full render of detail panel (used on initial select and after actions)
   async function loadDetail(id) {
     const dp = document.getElementById('detail-panel');
     const es = document.getElementById('empty-state');
 
     try {
-      const data    = await fetchJSON('/incidents/' + id);
-      const inc     = data.incident;
+      const data     = await fetchJSON('/incidents/' + id);
+      const inc      = data.incident;
       const timeline = data.timeline || [];
-      const notes   = data.notes    || [];
+      const notes    = data.notes    || [];
 
       es.style.display  = 'none';
       dp.style.display  = 'block';
 
-      dp.innerHTML = `
-        <div class="detail-header">
-          <div>
-            <h2>${esc(inc.incident_id)}</h2>
-            <span style="color:var(--text2);font-size:13px">${esc(inc.description || '')}</span>
-          </div>
-          <div class="actions">
-            <span class="sev sev-${inc.severity}" style="padding:4px 10px;font-size:12px">
-              ${inc.severity.toUpperCase()}
-            </span>
-            <span class="stat-badge stat-${inc.status}" style="padding:4px 10px;font-size:12px">
-              ${inc.status.toUpperCase()}
-            </span>
-          </div>
-        </div>
+      dp.innerHTML = buildDetailHTML(inc, timeline, notes);
 
-        <!-- Info cards -->
-        <div class="info-grid">
-          <div class="info-card"><div class="label">Service</div>    <div class="value">${esc(inc.affected_service || '—')}</div></div>
-          <div class="info-card"><div class="label">Environment</div><div class="value">${esc(inc.environment    || '—')}</div></div>
-          <div class="info-card"><div class="label">Region</div>     <div class="value">${esc(inc.region         || '—')}</div></div>
-          <div class="info-card"><div class="label">Risk Score</div> <div class="value">${(inc.risk_score || 0).toFixed(2)}</div></div>
-          <div class="info-card"><div class="label">Signals</div>    <div class="value">${inc.signal_count || 0}</div></div>
-          <div class="info-card"><div class="label">Analyst</div>    <div class="value">${esc(inc.assigned_analyst || 'Unassigned')}</div></div>
-          <div class="info-card"><div class="label">Created</div>    <div class="value" style="font-size:12px">${esc(inc.created_at    || '—')}</div></div>
-          <div class="info-card"><div class="label">Last Signal</div><div class="value" style="font-size:12px">${esc(inc.last_signal_at || '—')}</div></div>
-        </div>
-
-        <!-- Action row -->
-        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
-
-          <!-- Status update -->
-          <div>
-            <label style="font-size:12px;color:var(--text2)">Update Status:</label>
-            <div class="status-form">
-              <select id="status-sel"
-                      style="background:var(--surface2);border:1px solid var(--border);
-                             color:var(--text);padding:5px 8px;border-radius:4px;font-size:12px">
-                <option value="open">open</option>
-                <option value="investigating">investigating</option>
-                <option value="mitigated">mitigated</option>
-                <option value="resolved">resolved</option>
-                <option value="closed">closed</option>
-              </select>
-              <button class="btn btn-primary" onclick="updateStatus('${inc.incident_id}')">Update</button>
-            </div>
-          </div>
-
-          <!-- Analyst assignment -->
-          <div>
-            <label style="font-size:12px;color:var(--text2)">Assign Analyst:</label>
-            <div class="assign-form">
-              <input id="assign-input"
-                     placeholder="analyst name"
-                     value="${esc(inc.assigned_analyst || '')}">
-              <button class="btn btn-primary" onclick="assignAnalyst('${inc.incident_id}')">Assign</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
-          <div class="tab active"  onclick="switchTab(this,'tab-timeline')">Timeline</div>
-          <div class="tab"         onclick="switchTab(this,'tab-notes')">Notes</div>
-          <div class="tab"         onclick="switchTab(this,'tab-signals')">Signals</div>
-        </div>
-
-        <!-- Timeline tab -->
-        <div class="tab-content active" id="tab-timeline">
-          ${
-            timeline.length
-              ? timeline.map(t => `
-                  <div class="timeline-item">
-                    <div class="tl-dot ${tlDotClass(t.event_type)}"></div>
-                    <div>
-                      <div class="tl-desc">${esc(t.description)}</div>
-                      <div class="tl-time">${esc(t.timestamp)} —
-                        <span class="tl-actor">${esc(t.actor)}</span>
-                      </div>
-                    </div>
-                  </div>
-                `).join('')
-              : '<div style="color:var(--text2);font-size:13px">No timeline entries</div>'
-          }
-        </div>
-
-        <!-- Notes tab -->
-        <div class="tab-content" id="tab-notes">
-          <div class="note-form">
-            <input    id="note-analyst"  placeholder="Your name" style="width:120px">
-            <textarea id="note-content"  placeholder="Investigation note..."></textarea>
-            <button class="btn btn-primary" onclick="addNote('${inc.incident_id}')">Add</button>
-          </div>
-          ${
-            notes.length
-              ? notes.map(n => `
-                  <div class="note-item">
-                    <div class="note-meta">${esc(n.analyst)} — ${esc(n.created_at)}</div>
-                    <div class="note-body">${esc(n.content)}</div>
-                  </div>
-                `).join('')
-              : '<div style="color:var(--text2);font-size:13px">No notes yet</div>'
-          }
-        </div>
-
-        <!-- Signals tab -->
-        <div class="tab-content" id="tab-signals">
-          <div class="signal-list">
-            ${
-              (inc.signal_ids || []).length
-                ? (inc.signal_ids).map(s => `<div><span>${esc(s)}</span></div>`).join('')
-                : 'No signals'
-            }
-          </div>
-        </div>
-      `;
-
-      // Set the status dropdown to the incident's current status
-      document.getElementById('status-sel').value = inc.status;
+      // Set the status dropdown to current status
+      const sel = document.getElementById('status-sel');
+      if (sel) sel.value = inc.status;
 
     } catch (err) {
       dp.innerHTML =
@@ -764,77 +986,277 @@ DASHBOARD_HTML = r"""
     }
   }
 
+  // Smart refresh: updates read-only parts WITHOUT destroying form state
+  async function refreshDetail(id) {
+    const dp = document.getElementById('detail-panel');
+    if (!dp || dp.style.display === 'none') return;
+
+    try {
+      const data     = await fetchJSON('/incidents/' + id);
+      const inc      = data.incident;
+      const timeline = data.timeline || [];
+      const notes    = data.notes    || [];
+
+      // Update info cards without touching action forms
+      updateInfoCards(inc);
+
+      // Update header badges
+      const statusBadge = document.getElementById('detail-status-badge');
+      if (statusBadge) {
+        statusBadge.className = 'detail-badge stat-' + inc.status;
+        statusBadge.textContent = (inc.status || '').toUpperCase();
+      }
+
+      const sevBadge = document.getElementById('detail-sev-badge');
+      if (sevBadge) {
+        sevBadge.className = 'detail-badge sev-' + inc.severity;
+        sevBadge.textContent = (inc.severity || '').toUpperCase();
+      }
+
+      // Update timeline if tab is active
+      const tlTab = document.getElementById('tab-timeline');
+      if (tlTab && tlTab.classList.contains('active')) {
+        tlTab.innerHTML = buildTimelineHTML(timeline);
+      }
+
+      // Update signals
+      const sigTab = document.getElementById('tab-signals');
+      if (sigTab && sigTab.classList.contains('active')) {
+        sigTab.innerHTML = buildSignalsHTML(inc.signal_ids || []);
+      }
+
+    } catch (_) {
+      // silent - detail refresh is best-effort
+    }
+  }
+
+  function updateInfoCards(inc) {
+    const updates = {
+      'ic-service':     inc.affected_service || '\u2014',
+      'ic-environment': inc.environment      || '\u2014',
+      'ic-region':      inc.region           || '\u2014',
+      'ic-risk':        (inc.risk_score || 0).toFixed(2),
+      'ic-signals':     inc.signal_count     || 0,
+      'ic-analyst':     inc.assigned_analyst || 'Unassigned',
+      'ic-created':     inc.created_at       || '\u2014',
+      'ic-lastsignal':  inc.last_signal_at   || '\u2014',
+    };
+    for (const [id, val] of Object.entries(updates)) {
+      const el = document.getElementById(id);
+      if (el && el.textContent !== String(val)) {
+        el.textContent = val;
+        flashElement(el.closest('.info-card'), 'flash-accent');
+      }
+    }
+  }
+
+  /* ─────────────────────────── HTML builders ─────────────────────────── */
+
+  function buildDetailHTML(inc, timeline, notes) {
+    return `
+      <div class="detail-header">
+        <div>
+          <h2>${esc(inc.incident_id)}</h2>
+          <div class="subtitle">${esc(inc.description || '')}</div>
+        </div>
+        <div class="badges">
+          <span id="detail-sev-badge" class="detail-badge sev-${inc.severity}">
+            ${(inc.severity || '').toUpperCase()}
+          </span>
+          <span id="detail-status-badge" class="detail-badge stat-${inc.status}">
+            ${(inc.status || '').toUpperCase()}
+          </span>
+        </div>
+      </div>
+
+      <!-- Info cards -->
+      <div class="info-grid">
+        <div class="info-card"><div class="label">Service</div>     <div class="value" id="ic-service">${esc(inc.affected_service || '\u2014')}</div></div>
+        <div class="info-card"><div class="label">Environment</div> <div class="value" id="ic-environment">${esc(inc.environment    || '\u2014')}</div></div>
+        <div class="info-card"><div class="label">Region</div>      <div class="value" id="ic-region">${esc(inc.region         || '\u2014')}</div></div>
+        <div class="info-card"><div class="label">Risk Score</div>  <div class="value" id="ic-risk">${(inc.risk_score || 0).toFixed(2)}</div></div>
+        <div class="info-card"><div class="label">Signals</div>     <div class="value" id="ic-signals">${inc.signal_count || 0}</div></div>
+        <div class="info-card"><div class="label">Analyst</div>     <div class="value" id="ic-analyst">${esc(inc.assigned_analyst || 'Unassigned')}</div></div>
+        <div class="info-card"><div class="label">Created</div>     <div class="value" id="ic-created" style="font-size:12px">${esc(inc.created_at    || '\u2014')}</div></div>
+        <div class="info-card"><div class="label">Last Signal</div> <div class="value" id="ic-lastsignal" style="font-size:12px">${esc(inc.last_signal_at || '\u2014')}</div></div>
+      </div>
+
+      <!-- Action row -->
+      <div class="action-row">
+        <div class="action-group">
+          <label>Update Status</label>
+          <div class="form-row">
+            <select id="status-sel">
+              <option value="open">Open</option>
+              <option value="investigating">Investigating</option>
+              <option value="mitigated">Mitigated</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+            <button class="btn btn-primary" id="btn-status" onclick="updateStatus('${inc.incident_id}')">
+              Update
+            </button>
+          </div>
+        </div>
+
+        <div class="action-group">
+          <label>Assign Analyst</label>
+          <div class="form-row">
+            <input id="assign-input"
+                   placeholder="Enter analyst name..."
+                   value="${esc(inc.assigned_analyst || '')}"
+                   style="flex:1">
+            <button class="btn btn-success" id="btn-assign" onclick="assignAnalyst('${inc.incident_id}')">
+              Assign
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active"  onclick="switchTab(this,'tab-timeline')">Timeline (${timeline.length})</div>
+        <div class="tab"         onclick="switchTab(this,'tab-notes')">Notes (${notes.length})</div>
+        <div class="tab"         onclick="switchTab(this,'tab-signals')">Signals (${(inc.signal_ids || []).length})</div>
+      </div>
+
+      <!-- Timeline tab -->
+      <div class="tab-content active" id="tab-timeline">
+        ${buildTimelineHTML(timeline)}
+      </div>
+
+      <!-- Notes tab -->
+      <div class="tab-content" id="tab-notes">
+        <div class="note-form">
+          <input    id="note-analyst"  placeholder="Your name" style="width:130px">
+          <textarea id="note-content"  placeholder="Investigation note..."></textarea>
+          <button class="btn btn-primary" onclick="addNote('${inc.incident_id}')">Add</button>
+        </div>
+        ${buildNotesHTML(notes)}
+      </div>
+
+      <!-- Signals tab -->
+      <div class="tab-content" id="tab-signals">
+        ${buildSignalsHTML(inc.signal_ids || [])}
+      </div>
+    `;
+  }
+
+  function buildTimelineHTML(timeline) {
+    if (!timeline.length) return '<div class="no-items">No timeline entries</div>';
+    return timeline.slice().reverse().map(t => `
+      <div class="timeline-item">
+        <div class="tl-dot ${tlDotClass(t.event_type)}"></div>
+        <div style="flex:1">
+          <div class="tl-desc">${esc(t.description)}</div>
+          <div class="tl-time">
+            ${esc(t.timestamp)}
+            <span class="tl-actor"> \u2014 ${esc(t.actor)}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function buildNotesHTML(notes) {
+    if (!notes.length) return '<div class="no-items">No notes yet</div>';
+    return notes.slice().reverse().map(n => `
+      <div class="note-item">
+        <div class="note-meta">${esc(n.analyst)} \u2014 ${esc(n.created_at)}</div>
+        <div class="note-body">${esc(n.content)}</div>
+      </div>
+    `).join('');
+  }
+
+  function buildSignalsHTML(signalIds) {
+    if (!signalIds.length) return '<div class="no-items">No signals</div>';
+    return '<div class="signal-list">' +
+      signalIds.map(s => '<div class="signal-item">' + esc(s) + '</div>').join('') +
+      '</div>';
+  }
+
   /* ─────────────────────────── Tab switching ─────────────────────────── */
 
-  /**
-   * Switch active tab.
-   * @param {HTMLElement} el  - The clicked tab element.
-   * @param {string}      id  - ID of the corresponding tab-content div.
-   */
   function switchTab(el, id) {
-    // Deactivate all sibling tabs
     el.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
-
-    // Deactivate all tab content panels
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-    // Activate the target panel
     const target = document.getElementById(id);
     if (target) target.classList.add('active');
   }
 
   /* ─────────────────────────── Actions ─────────────────────────── */
 
-  /**
-   * PATCH the status of an incident.
-   * @param {string} id
-   */
   async function updateStatus(id) {
-    const statusSel = document.getElementById('status-sel');
-    if (!statusSel) return;
-    const status = statusSel.value;
+    const sel = document.getElementById('status-sel');
+    const btn = document.getElementById('btn-status');
+    if (!sel) return;
+
+    const status = sel.value;
+
+    actionInProgress = true;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Updating...'; }
 
     try {
       await fetchJSON('/incidents/' + id + '/status', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, actor: 'analyst' }),
+        body: JSON.stringify({ status: status, actor: 'analyst' }),
       });
+      showToast('Status updated to ' + status, 'success');
       await loadDetail(id);
       await poll();
+
+      // Flash the status badge
+      flashElement(document.getElementById('detail-status-badge'), 'flash-success');
+
     } catch (err) {
       console.error('updateStatus failed:', err);
+      showToast('Failed to update status: ' + err.message, 'error');
+    } finally {
+      actionInProgress = false;
+      if (btn) { btn.disabled = false; btn.textContent = 'Update'; }
     }
   }
 
-  /**
-   * Assign an analyst to an incident.
-   * @param {string} id
-   */
   async function assignAnalyst(id) {
     const input = document.getElementById('assign-input');
+    const btn   = document.getElementById('btn-assign');
     if (!input) return;
+
     const analyst = input.value.trim();
-    if (!analyst) return;
+    if (!analyst) {
+      showToast('Please enter an analyst name', 'error');
+      input.focus();
+      return;
+    }
+
+    actionInProgress = true;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Assigning...'; }
 
     try {
       await fetchJSON('/incidents/' + id + '/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ analyst }),
+        body: JSON.stringify({ analyst: analyst }),
       });
+      showToast('Assigned to ' + analyst, 'success');
       await loadDetail(id);
       await poll();
+
+      // Flash the analyst card
+      const analystCard = document.getElementById('ic-analyst');
+      if (analystCard) flashElement(analystCard.closest('.info-card'), 'flash-success');
+
     } catch (err) {
       console.error('assignAnalyst failed:', err);
+      showToast('Failed to assign: ' + err.message, 'error');
+    } finally {
+      actionInProgress = false;
+      if (btn) { btn.disabled = false; btn.textContent = 'Assign'; }
     }
   }
 
-  /**
-   * Add a note to an incident.
-   * @param {string} id
-   */
   async function addNote(id) {
     const analystInput  = document.getElementById('note-analyst');
     const contentInput  = document.getElementById('note-content');
@@ -842,18 +1264,30 @@ DASHBOARD_HTML = r"""
 
     const analyst = analystInput.value.trim();
     const content = contentInput.value.trim();
-    if (!analyst || !content) return;
+
+    if (!analyst || !content) {
+      showToast('Please enter both your name and note content', 'error');
+      if (!analyst) analystInput.focus();
+      else contentInput.focus();
+      return;
+    }
+
+    actionInProgress = true;
 
     try {
       await fetchJSON('/incidents/' + id + '/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ analyst, content }),
+        body: JSON.stringify({ analyst: analyst, content: content }),
       });
-      contentInput.value = '';   // Clear only the note body; keep analyst name
+      showToast('Note added successfully', 'success');
+      contentInput.value = '';
       await loadDetail(id);
     } catch (err) {
       console.error('addNote failed:', err);
+      showToast('Failed to add note: ' + err.message, 'error');
+    } finally {
+      actionInProgress = false;
     }
   }
 
@@ -870,7 +1304,7 @@ DASHBOARD_HTML = r"""
 
   /* ─────────────────────────── Bootstrap ─────────────────────────── */
   poll();
-  setInterval(poll, 3000);
+  setInterval(poll, 4000);
 </script>
 </body>
 </html>
