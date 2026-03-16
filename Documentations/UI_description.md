@@ -2,6 +2,12 @@
 
 The system provides multiple interfaces designed for different user roles interacting with the log-driven incident response platform. Each interface is optimized for specific workflows while maintaining consistency in design and user experience.
 
+### Current Implementation Status
+
+- The current repository includes a working dashboard UI served by FastAPI from the ingestion service route `/`.
+- Implemented location: `src/log_ingestion_service/app.py` (inline HTML, CSS, and JavaScript).
+- Planned architecture in this document includes a richer React-based interface for future iterations.
+
 ---
 
 ### 1. Graphical User Interface (GUI) Dashboard
