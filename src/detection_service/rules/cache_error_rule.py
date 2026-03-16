@@ -5,13 +5,13 @@ from models.detection_signal import DetectionSignal
 from rules.base_rule import BaseRule
 
 
-class HTTPErrorRule(BaseRule):
-    """Fires HTTP_ERROR_SPIKE when HTTP 500+ errors exceed threshold in a sliding window."""
+class CacheErrorRule(BaseRule):
+    """Fires CACHE_CONNECTION_ERROR when cache-related errors exceed threshold in a sliding window."""
 
     def __init__(self):
         self.window: deque[float] = deque()
-        self.threshold = 10
-        self.window_seconds = 30
+        self.threshold = 5
+        self.window_seconds = 60
 
     def configure(self, rule_id: str, params: dict) -> None:
         super().configure(rule_id, params)
@@ -19,11 +19,23 @@ class HTTPErrorRule(BaseRule):
         self.window_seconds = params.get("window_seconds", self.window_seconds)
 
     def check(self, event: dict) -> dict | None:
-        if event.get("event_type") != "http.request":
+        event_type = event.get("event_type", "")
+        normalized = event.get("normalized_type", "")
+        message = (event.get("message") or "").lower()
+        severity = event.get("severity", "")
+
+        is_cache_event = (
+            "cache" in event_type.lower()
+            or "CACHE" in normalized
+            or ("cache" in message and any(kw in message for kw in ("error", "fail", "timeout", "refused", "unreachable")))
+            or ("redis" in message and any(kw in message for kw in ("error", "fail", "timeout", "connection")))
+        )
+
+        if not is_cache_event:
             return None
 
-        status = event.get("metadata", {}).get("status")
-        if status is None or status < 500:
+        # Only count actual errors, not normal cache operations
+        if severity in ("INFO",) and "error" not in message and "fail" not in message:
             return None
 
         now = time.time()
@@ -36,7 +48,7 @@ class HTTPErrorRule(BaseRule):
             count = len(self.window)
             self.window.clear()
             return DetectionSignal(
-                signal_type="HTTP_ERROR_SPIKE",
+                signal_type="CACHE_CONNECTION_ERROR",
                 severity="HIGH",
                 service=event.get("service_name", "unknown"),
                 metadata={"count": count, "window_seconds": self.window_seconds},

@@ -1,15 +1,44 @@
-cd src/log_generators
-python run_all_generators.py
+# ===========================================================
+# Log-Driven Incident Response - Service Startup Commands
+# ===========================================================
+# Run each command in a SEPARATE terminal.
+# Install dependencies first: pip install -r requirements.txt
 
+# --- 1. Log Generators (produces realistic logs to src/logs/) ---
+cd src/log_generators
+pip install -r requirements.txt
+python run_all_generators.py
+# Optional: python run_all_generators.py error_spike
+
+# --- 2. Log Ingestion Service (port 8001) ---
+# Dashboard UI available at http://localhost:8001
 cd src/log_ingestion_service
+pip install -r requirements.txt
 python -m uvicorn app:app --reload --port 8001
 
-
+# --- 3. Log Processing Service (port 8002) ---
 cd src/log_processing_service
+pip install -r requirements.txt
 python -m uvicorn app:app --reload --port 8002
 
+# --- 4. Detection Service (port 8003) ---
 cd src/detection_service
+pip install -r requirements.txt
 python -m uvicorn app:app --reload --port 8003
 
+# --- 5. Notification Service (port 8004) ---
 cd src/notification_service
+pip install -r requirements.txt
 python -m uvicorn app:app --reload --port 8004
+
+# ===========================================================
+# API Endpoints Reference
+# ===========================================================
+# Ingestion Service (port 8001):
+#   GET  /              - Dashboard UI
+#   GET  /health        - Health check
+#   GET  /metrics       - Service metrics
+#   POST /logs          - Ingest single log (JSON body)
+#   POST /logs/batch    - Ingest batch ({"logs": [...]})
+#   GET  /ingestion/stats       - Ingestion statistics
+#   GET  /ingestion/recent-logs - Last N ingested logs
