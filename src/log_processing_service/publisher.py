@@ -2,9 +2,11 @@ import json
 import logging
 import queue
 
+import requests
+
 from config import (
     USE_REDIS, REDIS_HOST, REDIS_PORT,
-    OUTPUT_STREAM, MAX_QUEUE_SIZE,
+    OUTPUT_STREAM, MAX_QUEUE_SIZE, DETECT_API,
 )
 
 logger = logging.getLogger("processing.publisher")
@@ -27,10 +29,23 @@ def publish_event(event: dict) -> bool:
     """Publish a processed event to the detection service.
 
     Redis mode:  xadd to OUTPUT_STREAM (processed_logs)
-    Local mode:  push onto in-memory queue for API consumption
+    HTTP mode:   POST to DETECT_API (detection service)
+    Fallback:    push onto in-memory queue
     """
     if USE_REDIS:
         return _publish_redis(event)
+    return _publish_http(event)
+
+
+def _publish_http(event: dict) -> bool:
+    """Forward processed event to detection service via HTTP."""
+    if DETECT_API:
+        try:
+            resp = requests.post(DETECT_API, json=event, timeout=5)
+            resp.raise_for_status()
+            return True
+        except requests.RequestException as e:
+            logger.error("HTTP forward to detection service failed: %s", e)
     return _publish_local(event)
 
 
