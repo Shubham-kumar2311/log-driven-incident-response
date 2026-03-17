@@ -1,56 +1,90 @@
-import redis
 import json
+import logging
+import time
 
+from config import (
+    USE_REDIS, REDIS_HOST, REDIS_PORT,
+    INPUT_STREAM, CONSUMER_GROUP, CONSUMER_NAME,
+    POLL_INTERVAL, BATCH_SIZE,
+)
 from pipeline import ProcessingPipeline
-from config import USE_REDIS, REDIS_HOST, REDIS_PORT
+from publisher import publish_event
+
+logger = logging.getLogger("processing.consumer")
 
 
 class ProcessingConsumer:
+    """Reads raw events from Redis Stream (consumer group) and runs them through the pipeline."""
 
-    def __init__(self):
+    def __init__(self, pipeline: ProcessingPipeline | None = None):
+        self.pipeline = pipeline or ProcessingPipeline()
+        self._running = False
+        self._redis = None
 
-        self.pipeline = ProcessingPipeline()
-
-        self.last_id = "0"
-
-        if USE_REDIS:
-            self.redis_client = redis.Redis(
-                host=REDIS_HOST,
-                port=REDIS_PORT
+    def _get_redis(self):
+        if self._redis is None:
+            import redis
+            self._redis = redis.Redis(
+                host=REDIS_HOST, port=REDIS_PORT, decode_responses=True
             )
-        else:
-            self.redis_client = None
+            try:
+                self._redis.xgroup_create(INPUT_STREAM, CONSUMER_GROUP, id="0", mkstream=True)
+                logger.info("Created consumer group '%s' on stream '%s'", CONSUMER_GROUP, INPUT_STREAM)
+            except Exception:
+                pass  # Group already exists
+        return self._redis
 
     def run(self):
-
         if not USE_REDIS:
-            print("Redis disabled — API mode active")
+            logger.info("Redis disabled — consumer not starting")
             return
 
-        print("Processing consumer started (Redis mode)")
+        self._running = True
+        client = self._get_redis()
+        logger.info(
+            "Consumer started: group=%s, name=%s, stream=%s",
+            CONSUMER_GROUP, CONSUMER_NAME, INPUT_STREAM,
+        )
 
-        while True:
+        while self._running:
+            try:
+                messages = client.xreadgroup(
+                    CONSUMER_GROUP,
+                    CONSUMER_NAME,
+                    {INPUT_STREAM: ">"},
+                    count=BATCH_SIZE,
+                    block=int(POLL_INTERVAL * 1000) or 100,
+                )
 
-            messages = self.redis_client.xread(
-                {"raw_logs": self.last_id},
-                block=5000
-            )
+                if not messages:
+                    continue
 
-            for stream, events in messages:
+                for stream_name, entries in messages:
+                    for msg_id, data in entries:
+                        self._handle_message(client, msg_id, data)
 
-                for msg_id, data in events:
+            except Exception as e:
+                logger.error("Consumer loop error: %s", e)
+                time.sleep(1)
 
-                    try:
+    def _handle_message(self, client, msg_id: str, data: dict):
+        try:
+            raw_json = data.get("data", "{}")
+            event = json.loads(raw_json)
+            processed = self.pipeline.process(event)
 
-                        event = json.loads(data[b"data"])
+            if processed:
+                publish_event(processed)
 
-                        processed = self.pipeline.process(event)
+            # Acknowledge regardless (don't re-process drops)
+            client.xack(INPUT_STREAM, CONSUMER_GROUP, msg_id)
 
-                        if processed:
-                            print("Processed:", processed)
+        except json.JSONDecodeError as e:
+            logger.error("Invalid JSON in message %s: %s", msg_id, e)
+            client.xack(INPUT_STREAM, CONSUMER_GROUP, msg_id)
+        except Exception as e:
+            logger.error("Error processing message %s: %s", msg_id, e)
 
-                    except Exception as e:
-
-                        print("Processing error:", e)
-
-                    self.last_id = msg_id
+    def stop(self):
+        self._running = False
+        logger.info("Consumer stop requested")

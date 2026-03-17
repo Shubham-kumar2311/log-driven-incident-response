@@ -1,0 +1,59 @@
+{
+  "rules": [
+    {
+      "id": "http_error_spike",
+      "enabled": true,
+      "rule_class": "HTTPErrorRule",
+      "description": "Detects HTTP 500+ error spikes within a sliding time window",
+      "params": {
+        "threshold": 10,
+        "window_seconds": 30
+      }
+    },
+    {
+      "id": "high_latency",
+      "enabled": true,
+      "rule_class": "LatencyRule",
+      "description": "Flags individual requests with abnormally high latency",
+      "params": {
+        "threshold_ms": 2000
+      }
+    },
+    {
+      "id": "brute_force_login",
+      "enabled": true,
+      "rule_class": "AuthFailureRule",
+      "description": "Detects repeated login failures from the same IP address",
+      "params": {
+        "threshold": 5,
+        "window_seconds": 60
+      }
+    },
+    {
+      "id": "deployment_failure",
+      "enabled": true,
+      "rule_class": "DeploymentFailureRule",
+      "description": "Fires on any deployment failure event",
+      "params": {}
+    },
+    {
+      "id": "db_slow_query",
+      "enabled": true,
+      "rule_class": "DBSlowQueryRule",
+      "description": "Detects database queries exceeding a latency threshold",
+      "params": {
+        "threshold_ms": 3000
+      }
+    },
+    {
+      "id": "cache_connection_error",
+      "enabled": true,
+      "rule_class": "CacheErrorRule",
+      "description": "Detects cache/Redis connection error spikes within a sliding window",
+      "params": {
+        "threshold": 5,
+        "window_seconds": 60
+      }
+    }
+  ]
+}

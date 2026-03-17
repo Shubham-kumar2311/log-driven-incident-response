@@ -1,15 +1,60 @@
+# ===========================================================
+# Log-Driven Incident Response - Service Startup Commands
+# ===========================================================
+# Run each command in a SEPARATE terminal.
+# Install dependencies first: pip install -r requirements.txt
+
+# --- 1. Log Generators (produces realistic logs to src/logs/) ---
 cd src/log_generators
 python run_all_generators.py
+# Optional: python run_all_generators.py error_spike
 
+# --- 2. Log Ingestion Service (port 8001) ---
+# Dashboard UI available at http://localhost:8001
 cd src/log_ingestion_service
 python -m uvicorn app:app --reload --port 8001
 
-
+# --- 3. Log Processing Service (port 8002) ---
 cd src/log_processing_service
 python -m uvicorn app:app --reload --port 8002
 
+# --- 4. Detection Service (port 8003) ---
 cd src/detection_service
 python -m uvicorn app:app --reload --port 8003
 
-cd src/notification_service
+# --- 5. Incident Management Service (port 8004) ---
+# Dashboard UI available at http://localhost:8004
+cd src/incident_management
 python -m uvicorn app:app --reload --port 8004
+
+# --- 6. Notification Service (port 8004) ---
+cd src/notification_service
+pip install -r requirements.txt
+python -m uvicorn app:app --reload --port 8004
+
+# ===========================================================
+# API Endpoints Reference
+# ===========================================================
+# Ingestion Service (port 8001):
+#   GET  /              - Dashboard UI
+#   GET  /health        - Health check
+#   GET  /metrics       - Service metrics
+#   POST /logs          - Ingest single log (JSON body)
+#   POST /logs/batch    - Ingest batch ({"logs": [...]})
+#   GET  /ingestion/stats       - Ingestion statistics
+#   GET  /ingestion/recent-logs - Last N ingested logs
+#
+# Incident Management Service (port 8005):
+#   GET  /              - Analyst Dashboard UI
+#   GET  /health        - Health check
+#   GET  /metrics       - Service metrics
+#   POST /signals       - Ingest detection signals
+#   GET  /incidents     - List incidents (filter: status, severity, affected_service, environment)
+#   GET  /incidents/active         - List active incidents
+#   GET  /incidents/{id}           - Incident detail with timeline, notes, actions
+#   PATCH /incidents/{id}/status   - Update lifecycle status
+#   POST /incidents/{id}/assign    - Assign analyst
+#   POST /incidents/{id}/notes     - Add investigation note
+#   GET  /incidents/{id}/notes     - Get notes
+#   GET  /incidents/{id}/timeline  - Get timeline
+#   POST /incidents/{id}/response  - Trigger response action
