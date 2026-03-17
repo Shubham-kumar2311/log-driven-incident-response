@@ -33,5 +33,8 @@ DEFAULT_REGION = os.getenv("DEFAULT_REGION", "us-east-1")
 DEFAULT_CLUSTER = os.getenv("DEFAULT_CLUSTER", "prod-cluster")
 DEFAULT_ENVIRONMENT = os.getenv("DEFAULT_ENVIRONMENT", "production")
 
+# --- Forwarding ---
+DETECT_API = os.getenv("DETECT_API", "http://localhost:8003/detect")
+
 # --- Logging ---
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
