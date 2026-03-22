@@ -1,17 +1,10 @@
-from fastapi import FastAPI
-from playbook_engine import PlaybookEngine
+import sys
+import os
 
-app = FastAPI(
-    title="Response Service",
-    version="1.0"
-)
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-engine = PlaybookEngine()
+from api.app import app
 
-
-@app.post("/simulate-response")
-def simulate_response(incident: dict):
-
-    result = engine.execute(incident)
-
-    return result
+# Export app for uvicorn
+# Usage: python -m uvicorn app:app --port 8002 --reload

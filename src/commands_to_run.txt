@@ -23,14 +23,14 @@ cd src/detection_service
 python -m uvicorn app:app --reload --port 8003
 
 # --- 5. Incident Management Service (port 8004) ---
-# Dashboard UI available at http://localhost:8004
 cd src/incident_management
 python -m uvicorn app:app --reload --port 8004
+
 
 # --- 6. Notification Service (port 8004) ---
 cd src/notification_service
 pip install -r requirements.txt
-python -m uvicorn app:app --reload --port 8004
+python -m uvicorn app:app --reload --port 8006
 
 # ===========================================================
 # API Endpoints Reference
