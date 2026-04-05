@@ -5,6 +5,8 @@ import threading
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from client_auth_middleware import AuthMiddlewareASGI
 
 from config import MAX_BATCH_SIZE
 from file_watcher import FileWatcher
@@ -21,6 +23,24 @@ logging.basicConfig(
 logger = logging.getLogger("ingestion")
 
 app = FastAPI(title="Log Ingestion Service", version="2.0.0")
+
+
+# CORS for authentication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Auth server
+        "http://localhost:8001",
+        "http://localhost:3001",
+        "http://localhost:3002"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Authentication middleware - require ANALYST role
+app.add_middleware(AuthMiddlewareASGI, required_role="USER")
 
 watcher = FileWatcher()
 

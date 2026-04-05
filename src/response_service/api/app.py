@@ -19,6 +19,7 @@ from engine.playbook_engine import PlaybookEngine
 from messaging.publisher import publisher
 from pipeline import pipeline
 from ui.dashboard import DASHBOARD_HTML
+from client_auth_middleware import AuthMiddlewareASGI
 
 # Configure logging
 logging.basicConfig(
@@ -124,11 +125,19 @@ app = FastAPI(
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8000",  # Auth server
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Authentication middleware - require ADMIN role
+app.add_middleware(AuthMiddlewareASGI, required_role="ADMIN")
 
 # Repository and engine instances
 repository = PlaybookRepository()

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.incident_routes import init_routes, router as incident_router
 from config import LOG_LEVEL, USE_REDIS
@@ -12,6 +13,7 @@ from incident_store import IncidentStore
 from logger import setup_logging
 from metrics import metrics
 from ui.dashboard import DASHBOARD_HTML
+from client_auth_middleware import AuthMiddlewareASGI
 
 setup_logging(LOG_LEVEL)
 
@@ -34,6 +36,23 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan,
 )
+
+# CORS for authentication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Auth server
+        "http://localhost:8001",
+        "http://localhost:3001",
+        "http://localhost:3002"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Authentication middleware - require ANALYST role
+app.add_middleware(AuthMiddlewareASGI, required_role="ANALYST")
 
 app.include_router(incident_router)
 
