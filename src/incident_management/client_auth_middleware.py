@@ -12,18 +12,22 @@ This provides:
 """
 from functools import wraps
 from typing import Optional, List
+import os
 import jwt
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 
 # ============================================================
 # CONFIGURATION - ADJUST FOR YOUR SERVICE
 # ============================================================
 
-AUTH_SERVER_URL = "http://localhost:3000"
-JWT_SECRET = "super-secret-key-change-in-production"  # Must match auth server
-JWT_ALGORITHM = "HS256"
-COOKIE_NAME = "auth_token"
+AUTH_SERVER_URL = os.getenv("AUTH_SERVER_URL", "http://localhost:3000")
+JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-key-change-in-production")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+COOKIE_NAME = os.getenv("COOKIE_NAME", "auth_token")
 
 # Role this service requires (set based on service)
 # USER UI (3000) -> "USER"

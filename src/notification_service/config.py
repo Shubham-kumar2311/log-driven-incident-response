@@ -1,7 +1,12 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8006"))
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
 

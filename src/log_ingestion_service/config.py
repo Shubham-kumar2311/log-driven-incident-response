@@ -1,7 +1,13 @@
 import os
+from typing import List
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
+
+def _csv_env(name: str, default: str) -> List[str]:
+    raw = os.getenv(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -28,3 +34,9 @@ MAX_QUEUE_SIZE = int(os.getenv("MAX_QUEUE_SIZE", "10000"))
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8001"))
+
+AUTH_SERVER_URL = os.getenv("AUTH_SERVER_URL", "http://localhost:3000")
+CORS_ORIGINS = _csv_env(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8001",
+)

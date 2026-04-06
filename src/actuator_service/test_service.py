@@ -6,8 +6,9 @@ Tests all actions and endpoints.
 import asyncio
 import httpx
 import sys
+import os
 
-BASE_URL = "http://localhost:8006"
+BASE_URL = os.getenv("ACTUATOR_TEST_URL", "http://localhost:8007")
 
 
 async def test_health():

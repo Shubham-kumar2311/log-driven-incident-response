@@ -3,7 +3,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+_service_dir = Path(__file__).resolve().parent
+load_dotenv(_service_dir / ".env")
 
 # ── Redis ───────────────────────────────────────────────────────────
 USE_REDIS = os.getenv("USE_REDIS", "false").lower() == "true"
@@ -11,13 +12,16 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
 # ── Streams ─────────────────────────────────────────────────────────
-INPUT_STREAM = "processed_logs"
-OUTPUT_STREAM = "detection_signals"
-CONSUMER_GROUP = "detection-group"
+INPUT_STREAM = os.getenv("INPUT_STREAM", "processed_logs")
+OUTPUT_STREAM = os.getenv("OUTPUT_STREAM", "detection_signals")
+CONSUMER_GROUP = os.getenv("CONSUMER_GROUP", "detection-group")
 CONSUMER_NAME = os.getenv("CONSUMER_NAME", "detector-1")
 
+# ── Service API ──────────────────────────────────────────────────────
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8003"))
+
 # ── Rulebook ────────────────────────────────────────────────────────
-_service_dir = Path(__file__).resolve().parent
 RULEBOOK_PATH = os.getenv("RULEBOOK_PATH", str(_service_dir / "rulebook.json"))
 
 # ── Logging ─────────────────────────────────────────────────────────

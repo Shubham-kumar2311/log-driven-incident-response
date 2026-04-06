@@ -1,12 +1,27 @@
 import os
+from pathlib import Path
+from typing import List
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+
+def _csv_env(name: str, default: str) -> List[str]:
+    raw = os.getenv(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
 
 # Redis Configuration
 USE_REDIS = os.getenv("USE_REDIS", "false").lower() == "true"
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+
+# Service API
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8005"))
+CORS_ORIGINS = _csv_env(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8005",
+)
 
 # Redis Channels/Streams
 INCIDENT_STREAM = os.getenv("INCIDENT_STREAM", "incident_events")

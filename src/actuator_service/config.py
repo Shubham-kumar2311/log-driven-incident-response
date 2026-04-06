@@ -3,9 +3,15 @@ Actuator Service Configuration
 Environment-based configuration for execution modes and Redis connectivity.
 """
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+# Service API
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8007"))
+RELOAD = os.getenv("RELOAD", "false").lower() == "true"
 
 # Redis Configuration
 USE_REDIS = os.getenv("USE_REDIS", "false").lower() == "true"
@@ -31,9 +37,9 @@ DOCKER_CACHE_CONTAINER = os.getenv("DOCKER_CACHE_CONTAINER", "cache-container")
 DOCKER_WORKER_CONTAINER = os.getenv("DOCKER_WORKER_CONTAINER", "worker-container")
 
 # Service API URLs (for service-call mode)
-SERVICE_API_BASE = os.getenv("SERVICE_API_BASE", "http://localhost:8080")
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8081")
-NOTIFICATION_SERVICE_URL = os.getenv("NOTIFICATION_SERVICE_URL", "http://localhost:8082")
+SERVICE_API_BASE = os.getenv("SERVICE_API_BASE", "http://localhost:8005")
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:3000")
+NOTIFICATION_SERVICE_URL = os.getenv("NOTIFICATION_SERVICE_URL", "http://localhost:8006")
 
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

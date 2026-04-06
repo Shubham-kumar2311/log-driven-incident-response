@@ -9,28 +9,38 @@ cd src/log_generators
 python run_all_generators.py
 # Optional: python run_all_generators.py error_spike
 
-# --- 2. Log Ingestion Service (port 8001) ---
+# --- 2. Central Auth Service (port 3000) ---
+cd src/auth_service
+python app.py
+
+# --- 3. Log Ingestion Service (port 8001) ---
 # Dashboard UI available at http://localhost:8001
 cd src/log_ingestion_service
-python -m uvicorn app:app --reload --port 8001
+python app.py
 
-# --- 3. Log Processing Service (port 8002) ---
+# --- 4. Log Processing Service (port 8002) ---
 cd src/log_processing_service
-python -m uvicorn app:app --reload --port 8002
+python app.py
 
-# --- 4. Detection Service (port 8003) ---
+# --- 5. Detection Service (port 8003) ---
 cd src/detection_service
-python -m uvicorn app:app --reload --port 8003
+python app.py
 
-# --- 5. Incident Management Service (port 8004) ---
+# --- 6. Incident Management Service (port 8004) ---
 cd src/incident_management
-python -m uvicorn app:app --reload --port 8004
+python app.py
 
+# --- 7. Response Service (port 8005) ---
+cd src/response_service
+python app.py
 
-# --- 6. Notification Service (port 8004) ---
+# --- 8. Notification Service (port 8006) ---
 cd src/notification_service
-pip install -r requirements.txt
-python -m uvicorn app:app --reload --port 8006
+python app.py
+
+# --- 9. Actuator Service (port 8007) ---
+cd src/actuator_service
+python app.py
 
 # ===========================================================
 # API Endpoints Reference
@@ -44,7 +54,7 @@ python -m uvicorn app:app --reload --port 8006
 #   GET  /ingestion/stats       - Ingestion statistics
 #   GET  /ingestion/recent-logs - Last N ingested logs
 #
-# Incident Management Service (port 8005):
+# Incident Management Service (port 8004):
 #   GET  /              - Analyst Dashboard UI
 #   GET  /health        - Health check
 #   GET  /metrics       - Service metrics

@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 import sys
 sys.path.insert(0, "..")
 
-from config import USE_REDIS, LOG_LEVEL
+from config import USE_REDIS, LOG_LEVEL, CORS_ORIGINS
 from db.mongo_client import mongo_client
 from repository.playbook_repository import PlaybookRepository
 from engine.playbook_engine import PlaybookEngine
@@ -125,12 +125,7 @@ app = FastAPI(
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8000",  # Auth server
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002"
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.incident_routes import init_routes, router as incident_router
-from config import LOG_LEVEL, USE_REDIS
+from config import LOG_LEVEL, USE_REDIS, CORS_ORIGINS, HOST, PORT
 from consumer import DetectionConsumer
 from incident_manager import IncidentManager
 from incident_store import IncidentStore
@@ -40,12 +40,7 @@ app = FastAPI(
 # CORS for authentication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Auth server
-        "http://localhost:8001",
-        "http://localhost:3001",
-        "http://localhost:3002"
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,3 +70,9 @@ def health():
 @app.get("/metrics")
 def get_metrics():
     return metrics.snapshot()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=True)
