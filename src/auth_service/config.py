@@ -49,7 +49,7 @@ class Settings:
     ROLE_REDIRECTS = {
         "USER": os.getenv("ROLE_REDIRECT_USER", "http://localhost:8001"),
         "ANALYST": os.getenv("ROLE_REDIRECT_ANALYST", "http://localhost:8004"),
-        "ADMIN": os.getenv("ROLE_REDIRECT_ADMIN", "http://localhost:8005"),
+        "ADMIN": os.getenv("ROLE_REDIRECT_ADMIN", "http://localhost:3000/admin"),
     }
 
     # Detection Service

@@ -15,6 +15,7 @@ from typing import Optional, List
 import os
 import jwt
 import httpx
+from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -37,6 +38,7 @@ REQUIRED_ROLE = "USER"  # Change this per service
 
 # Paths that don't require authentication
 EXCLUDE_PATHS = [
+    "/logout",
     "/health",
     "/docs",
     "/openapi.json",
@@ -157,6 +159,15 @@ class AuthMiddlewareASGI:
 
         path = scope["path"]
 
+        # Allow logout from any service by delegating to central auth server
+        if path == "/logout":
+            response = RedirectResponse(
+                url=f"{AUTH_SERVER_URL}/logout",
+                status_code=307
+            )
+            await response(scope, receive, send)
+            return
+
         # Skip excluded paths
         for excluded in self.exclude_paths:
             if path.startswith(excluded):
@@ -206,11 +217,26 @@ class AuthMiddlewareASGI:
             user_level = role_levels.get(user_role, 0)
 
             if user_level < required_level:
-                from fastapi.responses import JSONResponse
-                response = JSONResponse(
-                    status_code=403,
-                    content={"error": f"Access denied. Required role: {self.required_role}"}
-                )
+                accept_header = headers.get(b"accept", b"").decode().lower()
+                query_string = scope.get("query_string", b"").decode()
+                target = path if not query_string else f"{path}?{query_string}"
+
+                if "application/json" in accept_header and "text/html" not in accept_header:
+                    from fastapi.responses import JSONResponse
+                    response = JSONResponse(
+                        status_code=403,
+                        content={"error": f"Access denied. Required role: {self.required_role}"}
+                    )
+                else:
+                    response = RedirectResponse(
+                        url=(
+                            f"{AUTH_SERVER_URL}/access-denied"
+                            f"?required_role={self.required_role}"
+                            f"&current_role={user_role or 'UNKNOWN'}"
+                            f"&target={quote_plus(target)}"
+                        ),
+                        status_code=307
+                    )
                 await response(scope, receive, send)
                 return
 

@@ -126,12 +126,22 @@ class User:
         )
 
     @classmethod
-    async def find_all(cls, page: int = 1, limit: int = 50) -> Dict[str, Any]:
+    async def find_all(cls, page: int = 1, limit: int = 50, search: Optional[str] = None) -> Dict[str, Any]:
         """Get all users with pagination"""
-        total = await cls._db().count_documents({})
+        query: Dict[str, Any] = {}
+        if search:
+            query = {
+                "$or": [
+                    {"username": {"$regex": search, "$options": "i"}},
+                    {"email": {"$regex": search, "$options": "i"}},
+                    {"role": {"$regex": search, "$options": "i"}}
+                ]
+            }
+
+        total = await cls._db().count_documents(query)
         skip = (page - 1) * limit
 
-        cursor = cls._db().find({}).skip(skip).limit(limit).sort("created_at", -1)
+        cursor = cls._db().find(query).skip(skip).limit(limit).sort("created_at", -1)
         users = await cursor.to_list(length=limit)
 
         return {
@@ -140,6 +150,33 @@ class User:
             "page": page,
             "pages": (total + limit - 1) // limit
         }
+
+    @classmethod
+    async def count_by_role(cls, role: str) -> int:
+        """Count users by role"""
+        return await cls._db().count_documents({"role": role})
+
+    @classmethod
+    async def update_role(cls, user_id: str, new_role: str, updated_by: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Update user role"""
+        update_doc: Dict[str, Any] = {
+            "role": new_role,
+            "updated_at": datetime.utcnow()
+        }
+        if updated_by:
+            update_doc["role_updated_by"] = updated_by
+
+        try:
+            result = await cls._db().update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": update_doc}
+            )
+            if result.matched_count == 0:
+                return None
+            updated_user = await cls._db().find_one({"_id": ObjectId(user_id)})
+            return cls._serialize(updated_user)
+        except Exception:
+            return None
 
     @classmethod
     def _serialize(cls, user: Optional[Dict], include_password: bool = False) -> Optional[Dict[str, Any]]:

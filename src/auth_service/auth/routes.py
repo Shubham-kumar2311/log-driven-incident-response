@@ -35,6 +35,10 @@ class RegisterRequest(BaseModel):
     role: Optional[UserRole] = UserRole.USER
 
 
+class UpdateUserRoleRequest(BaseModel):
+    role: UserRole
+
+
 # ============================================================
 # HELPER FUNCTIONS
 # ============================================================
@@ -71,6 +75,43 @@ def delete_auth_cookie(response: Response) -> None:
         key=settings.COOKIE_NAME,
         path="/"
     )
+
+
+async def get_authenticated_user(request: Request) -> Optional[dict]:
+    """Get authenticated user from auth cookie"""
+    token = request.cookies.get(settings.COOKIE_NAME)
+    if not token:
+        return None
+
+    payload = verify_token(token)
+    if not payload:
+        return None
+
+    user_id = payload.get("user_id")
+    if not user_id:
+        return None
+
+    user = await User.find_by_id(user_id)
+    if not user or not user.get("is_active"):
+        return None
+
+    return user
+
+
+async def require_admin_user(request: Request) -> dict:
+    """Require admin session for privileged actions"""
+    user = await get_authenticated_user(request)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    if user.get("role") != UserRole.ADMIN.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return user
 
 
 # ============================================================
@@ -417,6 +458,93 @@ async def verify(request: Request):
             "email": user["email"],
             "role": user["role"]
         }
+    }
+
+
+@router.get("/admin/users")
+async def admin_list_users(
+    request: Request,
+    page: int = 1,
+    limit: int = 25,
+    search: Optional[str] = None
+):
+    """Admin-only user search (username/email) with pagination"""
+    await require_admin_user(request)
+
+    if page < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page must be >= 1")
+
+    if not search or not search.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Search query is required. Search by username or email."
+        )
+
+    safe_limit = max(1, min(limit, 100))
+    users_data = await User.find_all(page=page, limit=safe_limit, search=search.strip())
+
+    return {
+        "success": True,
+        "data": users_data
+    }
+
+
+@router.patch("/admin/users/{user_id}/role")
+async def admin_update_user_role(
+    user_id: str,
+    data: UpdateUserRoleRequest,
+    request: Request
+):
+    """Admin-only role update endpoint"""
+    admin_user = await require_admin_user(request)
+
+    target_user = await User.find_by_id(user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if target_user["id"] == admin_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot change your own role"
+        )
+
+    current_role = target_user.get("role")
+    next_role = data.role.value
+
+    if current_role == UserRole.ADMIN.value and next_role != UserRole.ADMIN.value:
+        admin_count = await User.count_by_role(UserRole.ADMIN.value)
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one admin account must remain"
+            )
+
+    updated_user = await User.update_role(
+        user_id=user_id,
+        new_role=next_role,
+        updated_by=admin_user["id"]
+    )
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update role"
+        )
+
+    logger.info(
+        "Admin role update: admin=%s target=%s old_role=%s new_role=%s",
+        admin_user["username"],
+        target_user["username"],
+        current_role,
+        next_role,
+    )
+
+    return {
+        "success": True,
+        "message": "User role updated successfully",
+        "user": updated_user
     }
 
 
