@@ -1,9 +1,16 @@
 import os
 from pathlib import Path
+from typing import List
 
 from dotenv import load_dotenv
 
-load_dotenv()
+_service_dir = Path(__file__).resolve().parent
+load_dotenv(_service_dir / ".env")
+
+
+def _csv_env(name: str, default: str) -> List[str]:
+    raw = os.getenv(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
 
 # ── Redis ───────────────────────────────────────────────────────────
 USE_REDIS = os.getenv("USE_REDIS", "false").lower() == "true"
@@ -15,6 +22,14 @@ INPUT_STREAM = os.getenv("INPUT_STREAM", "detection_signals")
 OUTPUT_CHANNEL = os.getenv("OUTPUT_CHANNEL", "incident_events")
 CONSUMER_GROUP = os.getenv("CONSUMER_GROUP", "incident-group")
 CONSUMER_NAME = os.getenv("CONSUMER_NAME", "incident-mgr-1")
+
+# ── Service API ──────────────────────────────────────────────────────
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8004"))
+CORS_ORIGINS = _csv_env(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8004",
+)
 
 # ── MongoDB ─────────────────────────────────────────────────────────
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
