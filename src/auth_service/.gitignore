@@ -1,0 +1,80 @@
+# Environment & Configuration
+.env
+.env.local
+.env.*.local
+.env.prod
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+ve/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python files
+__pycache__/
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.mongo
+
+# OS & System
+Thumbs.db
+.env.swp
+.env.swo
+.env
+.env/
