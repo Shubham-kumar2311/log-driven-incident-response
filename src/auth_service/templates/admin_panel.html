@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - User Access Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(130deg, #0f172a 0%, #1d3557 45%, #0b1325 100%);
+            min-height: 100vh;
+            color: #eaf1ff;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            gap: 16px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .subtitle {
+            color: #bbcaef;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .identity {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #d7e2ff;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, #43d9bd, #1ec48a);
+            color: #062319;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #eaf1ff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-row input {
+            flex: 1;
+            min-width: 240px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.25);
+            color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            vertical-align: middle;
+        }
+
+        th {
+            color: #b7c7f0;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        select {
+            min-width: 138px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-weight: 600;
+        }
+
+        select:focus {
+            outline: 2px solid rgba(67, 217, 189, 0.65);
+            outline-offset: 1px;
+            border-color: rgba(67, 217, 189, 0.9);
+        }
+
+        /* Windows/native dropdown menus often ignore parent colors.
+           Set option colors explicitly so role values are always visible. */
+        select option {
+            color: #0f172a;
+            background: #ffffff;
+        }
+
+        .status {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #c5d2f3;
+        }
+
+        .status.error {
+            color: #ff9494;
+        }
+
+        .status.info {
+            color: #b7c7f0;
+        }
+
+        .logout-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 10, 24, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .logout-overlay.active {
+            display: flex;
+        }
+
+        .logout-box {
+            min-width: 280px;
+            padding: 22px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            text-align: center;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .logout-spinner {
+            width: 34px;
+            height: 34px;
+            margin: 0 auto 10px auto;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #43d9bd;
+            animation: logout-spin 0.8s linear infinite;
+        }
+
+        .logout-text {
+            font-size: 15px;
+            color: #e8f0ff;
+            animation: logout-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes logout-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes logout-pulse {
+            0% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        @media (max-width: 900px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                margin-bottom: 12px;
+                padding: 8px;
+            }
+
+            td {
+                border-bottom: 0;
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="title">Admin Panel</div>
+                <div class="subtitle">Manage users and assign USER / ANALYST / ADMIN roles</div>
+                <div class="identity">Signed in as: {{ current_user.username }}</div>
+            </div>
+            <div class="toolbar">
+                <a href="/login" class="btn btn-secondary">Switch Account</a>
+                <a href="/logout" class="btn btn-secondary logout-link">Logout</a>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="search-row">
+                <input id="search" type="text" placeholder="Search by username, email, or role" />
+                <button id="search-btn" class="btn btn-secondary">Search</button>
+                <button id="reload-btn" class="btn btn-primary">Reload</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>Change Role</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="users-body"></tbody>
+            </table>
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <div id="logout-overlay" class="logout-overlay" aria-live="polite" aria-label="Logging out">
+        <div class="logout-box">
+            <div class="logout-spinner"></div>
+            <div class="logout-text">Logging out {{ current_user.username }}...</div>
+        </div>
+    </div>
+
+    <script>
+        const bodyEl = document.getElementById('users-body');
+        const statusEl = document.getElementById('status');
+        const searchEl = document.getElementById('search');
+        const logoutOverlay = document.getElementById('logout-overlay');
+
+        async function loadUsers() {
+            const query = searchEl.value.trim();
+            if (!query) {
+                bodyEl.innerHTML = '';
+                statusEl.className = 'status error';
+                statusEl.textContent = 'Enter username or email to search.';
+                return;
+            }
+
+            statusEl.className = 'status';
+            statusEl.textContent = 'Searching users...';
+
+            const url = `/admin/users?limit=50&search=${encodeURIComponent(query)}`;
+
+            try {
+                const res = await fetch(url, {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Failed to load users');
+                }
+
+                const data = await res.json();
+                const users = data?.data?.users || [];
+
+                bodyEl.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${escapeHtml(u.username)}</td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td>${escapeHtml(u.role)}</td>
+                        <td>
+                            <select id="role-${u.id}">
+                                <option value="USER" ${u.role === 'USER' ? 'selected' : ''}>USER</option>
+                                <option value="ANALYST" ${u.role === 'ANALYST' ? 'selected' : ''}>ANALYST</option>
+                                <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary" onclick="updateRole('${u.id}', '${escapeAttr(u.username)}')">Save</button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                if (!users.length) {
+                    statusEl.className = 'status info';
+                    statusEl.textContent = 'No users found for that search.';
+                } else {
+                    statusEl.textContent = `Found ${users.length} user(s)`;
+                }
+            } catch (err) {
+                statusEl.className = 'status error';
+                statusEl.textContent = err.message || 'Unable to load users';
+            }
+        }
+
+        async function updateRole(userId, username) {
+            const selectEl = document.getElementById(`role-${userId}`);
+            const role = selectEl.value;
+            statusEl.className = 'status';
+            statusEl.textContent = `Updating ${username} to ${role}...`;
+
+            try {
+                const res = await fetch(`/admin/users/${userId}/role`, {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ role })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.detail || data.message || 'Update failed');
+                }
+
+                statusEl.textContent = `Updated ${username} to ${role}`;
+                await loadUsers();
+            } catch (err) {
+                statusEl.className = 'status error';
+                statusEl.textContent = err.message || 'Unable to update role';
+            }
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeAttr(text) {
+            return String(text).replace(/'/g, "\\'");
+        }
+
+        document.getElementById('reload-btn').addEventListener('click', loadUsers);
+        document.getElementById('search-btn').addEventListener('click', loadUsers);
+        searchEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loadUsers();
+            }
+        });
+
+        document.querySelectorAll('.logout-link').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                logoutOverlay.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 550);
+            });
+        });
+
+        statusEl.className = 'status info';
+        statusEl.textContent = 'Search by username or email to load users.';
+    </script>
+</body>
+</html>
