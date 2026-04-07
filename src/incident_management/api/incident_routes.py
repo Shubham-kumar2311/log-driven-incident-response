@@ -52,6 +52,7 @@ class ResponseActionRequest(BaseModel):
 
 @router.post("/signals")
 def ingest_signals(payload: SignalsPayload):
+    print(f"Received {len(payload.signals)} signals for processing")
     results = []
     for signal in payload.signals:
         incident = _manager.process_signal(signal)
