@@ -42,7 +42,11 @@ EXCLUDE_PATHS = [
     "/health",
     "/docs",
     "/openapi.json",
-    "/favicon.ico"
+    "/favicon.ico",
+    "/simulate-response",  # Allow incident management to trigger responses without auth
+    "/simulate",           # Allow simulation endpoint
+    "/actions",            # Allow actions listing
+    "/metrics",            # Allow metrics collection
 ]
 
 
