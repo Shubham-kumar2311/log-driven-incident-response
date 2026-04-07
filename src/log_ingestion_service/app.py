@@ -5,8 +5,10 @@ import threading
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from client_auth_middleware import AuthMiddlewareASGI
 
-from config import MAX_BATCH_SIZE
+from config import MAX_BATCH_SIZE, CORS_ORIGINS, HOST, PORT
 from file_watcher import FileWatcher
 from processor import process_log, process_batch
 from publisher import publish_event
@@ -21,6 +23,19 @@ logging.basicConfig(
 logger = logging.getLogger("ingestion")
 
 app = FastAPI(title="Log Ingestion Service", version="2.0.0")
+
+
+# CORS for authentication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Authentication middleware - require ANALYST role
+app.add_middleware(AuthMiddlewareASGI, required_role="USER")
 
 watcher = FileWatcher()
 
@@ -449,3 +464,9 @@ refreshTimer = setInterval(poll, 2500);
 </script>
 </body>
 </html>"""
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=True)

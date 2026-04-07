@@ -19,7 +19,7 @@ The GUI dashboard is primarily used for **incident monitoring and management**. 
 **Supported Components**
 
 - Incident Management Service
-- Detection Service
+
 - Notification Service
 - Reporting & Audit Logging
 - Response Service (for action tracking)
@@ -72,7 +72,7 @@ The GUI dashboard is primarily used for **incident monitoring and management**. 
 
 **Users**
 
-- Security Analysts  
+- system administrators 
 - System Operators
 - DevOps Engineers
 

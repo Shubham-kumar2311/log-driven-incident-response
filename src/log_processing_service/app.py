@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from config import USE_REDIS, LOG_LEVEL
+from config import USE_REDIS, LOG_LEVEL, HOST, PORT
 from consumer import ProcessingConsumer
 from pipeline import ProcessingPipeline
 from publisher import publish_event, get_local_queue
@@ -86,3 +86,9 @@ def metrics():
 @app.get("/processed-queue-size")
 def queue_size():
     return {"processed_event_queue_size": get_local_queue().qsize()}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=True)

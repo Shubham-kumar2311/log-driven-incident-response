@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from config import LOG_LEVEL, USE_REDIS
+from config import LOG_LEVEL, USE_REDIS, HOST, PORT
 from logger import setup_logging
 from metrics import metrics
 from pipeline import DetectionPipeline
@@ -78,3 +78,9 @@ def health():
 @app.get("/metrics")
 def get_metrics():
     return metrics.snapshot()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=True)

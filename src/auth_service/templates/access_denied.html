@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top right, #2f2b52 0%, #0f1226 45%, #090b17 100%);
+            color: #f5f7ff;
+            padding: 24px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 620px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 18px;
+            padding: 28px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.35);
+        }
+
+        .headline {
+            font-size: 30px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .subtext {
+            color: #d0d7ff;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .identity {
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #b7c6f5;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .detail {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .detail-label {
+            color: #95a0d3;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn {
+            text-decoration: none;
+            border: 0;
+            border-radius: 10px;
+            padding: 12px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, #2ec4b6, #1cb98a);
+            color: #07130f;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #eef1ff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logout-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 11, 25, 0.74);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .logout-overlay.active {
+            display: flex;
+        }
+
+        .logout-box {
+            min-width: 260px;
+            padding: 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+
+        .logout-spinner {
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 10px auto;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #2ec4b6;
+            animation: logout-spin 0.8s linear infinite;
+        }
+
+        .logout-text {
+            color: #f0f4ff;
+            animation: logout-pulse 1.15s ease-in-out infinite;
+        }
+
+        @keyframes logout-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes logout-pulse {
+            0% {
+                opacity: 0.58;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.58;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="headline">Access Denied</h1>
+        <p class="subtext">
+            Your current account does not have permission for this area.
+            You can switch account or sign out and login with an authorized account.
+        </p>
+
+        {% if username %}
+        <div class="identity">Signed in as: {{ username }}</div>
+        {% endif %}
+
+        <div class="details">
+            <div class="detail">
+                <div class="detail-label">Current Role</div>
+                <div class="detail-value">{{ current_role }}</div>
+            </div>
+            <div class="detail">
+                <div class="detail-label">Required Role</div>
+                <div class="detail-value">{{ required_role }}</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a class="btn btn-primary" href="/login">Login with Different Account</a>
+            <a class="btn btn-secondary logout-link" href="/logout">Logout</a>
+            <a class="btn btn-secondary" href="{{ target }}">Retry Target</a>
+        </div>
+    </div>
+
+    <div id="logout-overlay" class="logout-overlay" aria-live="polite" aria-label="Logging out">
+        <div class="logout-box">
+            <div class="logout-spinner"></div>
+            <div class="logout-text">Logging out{% if username %} {{ username }}{% endif %}...</div>
+        </div>
+    </div>
+
+    <script>
+        const logoutOverlay = document.getElementById('logout-overlay');
+        document.querySelectorAll('.logout-link').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                logoutOverlay.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>
