@@ -8,8 +8,18 @@ class EmailNotifier:
 
     def send(self, incident):
 
-        if not SMTP_USER or not SMTP_PASSWORD or not EMAIL_TO:
-            print("Email config missing, skipping email")
+        recipient_email = (
+            incident.get("receiver_email")
+            or incident.get("reciever_email")
+            or EMAIL_TO
+        )
+
+        if not SMTP_USER or not SMTP_PASSWORD:
+            print("SMTP config missing, skipping email")
+            return
+
+        if not recipient_email:
+            print("Recipient email missing, skipping email")
             return
 
         subject = f"[INCIDENT] {incident['severity']} - {incident['service']}"
@@ -30,7 +40,7 @@ Message:
 
         msg["Subject"] = subject
         msg["From"] = SMTP_USER
-        msg["To"] = EMAIL_TO
+        msg["To"] = recipient_email
 
         try:
 
@@ -50,7 +60,7 @@ Message:
 
             server.sendmail(
                 SMTP_USER,
-                EMAIL_TO,
+                recipient_email,
                 msg.as_string()
             )
 
