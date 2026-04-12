@@ -24,15 +24,30 @@ PORT = int(os.getenv("PORT", "8003"))
 # ── Rulebook ────────────────────────────────────────────────────────
 RULEBOOK_PATH = os.getenv("RULEBOOK_PATH", str(_service_dir / "rulebook.json"))
 
+# ── Hybrid Detection / External ML ─────────────────────────────────
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://localhost:9000/predict")
+ML_REQUEST_TIMEOUT_SECONDS = float(os.getenv("ML_REQUEST_TIMEOUT_SECONDS", 2.5))
+ML_MAX_RETRIES = int(os.getenv("ML_MAX_RETRIES", 1))
+SKIP_ML_IF_RULE_TRIGGERED = os.getenv("SKIP_ML_IF_RULE_TRIGGERED", "false").lower() == "true"
+RUN_ML_WHEN_RULE_TRIGGERED = os.getenv("RUN_ML_WHEN_RULE_TRIGGERED", "true").lower() == "true"
+ML_MODE = os.getenv("ML_MODE", "external").lower()  # runtime | external | hybrid
+ML_RUNTIME_WARMUP_SAMPLES = int(os.getenv("ML_RUNTIME_WARMUP_SAMPLES", 25))
+ML_RUNTIME_ANOMALY_Z_THRESHOLD = float(os.getenv("ML_RUNTIME_ANOMALY_Z_THRESHOLD", 3.0))
+ML_RUNTIME_MIN_STD = float(os.getenv("ML_RUNTIME_MIN_STD", 0.05))
+ML_RUNTIME_LEARN_ON_ANOMALY = os.getenv("ML_RUNTIME_LEARN_ON_ANOMALY", "false").lower() == "true"
+
 # ── Logging ─────────────────────────────────────────────────────────
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
-# ── Anomaly Engine ──────────────────────────────────────────────────
-ANOMALY_WINDOW_SIZE = int(os.getenv("ANOMALY_WINDOW_SIZE", 100))
+# ── Statistical Detector Settings ───────────────────────────────────
 ANOMALY_Z_THRESHOLD = float(os.getenv("ANOMALY_Z_THRESHOLD", 2.5))
-ANOMALY_RATE_WINDOW_SECONDS = int(os.getenv("ANOMALY_RATE_WINDOW_SECONDS", 60))
-ANOMALY_RATE_THRESHOLD_MULTIPLIER = float(os.getenv("ANOMALY_RATE_THRESHOLD_MULTIPLIER", 3.0))
 ANOMALY_MIN_SAMPLES = int(os.getenv("ANOMALY_MIN_SAMPLES", 10))
 
 # ── Forwarding (API mode) ──────────────────────────────────────────
 FORWARD_URL = os.getenv("FORWARD_URL", "")
+
+# ── MongoDB (Detection results + feedback) ─────────────────────────
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB = os.getenv("MONGO_DB", "detection_service")
+USE_MONGO = os.getenv("USE_MONGO", "false").lower() == "true"
+DETECTION_STORE_FILE = os.getenv("DETECTION_STORE_FILE", str(_service_dir / "detection_store.jsonl"))
