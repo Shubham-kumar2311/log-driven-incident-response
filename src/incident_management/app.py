@@ -3,15 +3,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.incident_routes import init_routes, router as incident_router
-from config import LOG_LEVEL, USE_REDIS
+from config import LOG_LEVEL, USE_REDIS, CORS_ORIGINS, HOST, PORT
 from consumer import DetectionConsumer
 from incident_manager import IncidentManager
 from incident_store import IncidentStore
 from logger import setup_logging
 from metrics import metrics
 from ui.dashboard import DASHBOARD_HTML
+from client_auth_middleware import AuthMiddlewareASGI
 
 setup_logging(LOG_LEVEL)
 
@@ -35,6 +37,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS for authentication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Authentication middleware - require ANALYST role
+app.add_middleware(AuthMiddlewareASGI, required_role="ANALYST")
+
 app.include_router(incident_router)
 
 
@@ -56,3 +70,9 @@ def health():
 @app.get("/metrics")
 def get_metrics():
     return metrics.snapshot()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=True)

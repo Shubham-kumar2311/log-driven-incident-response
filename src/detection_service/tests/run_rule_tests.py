@@ -1,8 +1,9 @@
 import json
+import os
 import requests
 import time
 
-URL = "http://localhost:8003/detect"
+URL = os.getenv("DETECTION_TEST_URL", "http://localhost:8003/detect")
 
 with open("rule_test_events.json") as f:
     events = json.load(f)
