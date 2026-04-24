@@ -53,6 +53,7 @@ class User:
             "username": username.lower().strip(),
             "email": email.lower().strip(),
             "password_hash": hash_password(password),
+            "auth_provider": "local",
             "role": role.value,
             "is_active": True,
             "created_at": datetime.utcnow(),
@@ -65,6 +66,40 @@ class User:
         user_doc["_id"] = result.inserted_id
 
         logger.info(f"User created: {username} with role {role.value}")
+        return cls._serialize(user_doc)
+
+    @classmethod
+    async def create_oauth_user(
+        cls,
+        username: str,
+        email: str,
+        provider: str,
+        oauth_sub: str,
+        avatar_url: Optional[str] = None,
+        role: UserRole = UserRole.USER
+    ) -> Dict[str, Any]:
+        """Create a user from OAuth identity provider"""
+        normalized_provider = provider.lower().strip()
+        normalized_oauth_sub = oauth_sub.strip()
+        user_doc = {
+            "username": username.lower().strip(),
+            "email": email.lower().strip(),
+            "auth_provider": normalized_provider,
+            "oauth_sub": normalized_oauth_sub,
+            "oauth_key": f"{normalized_provider}:{normalized_oauth_sub}",
+            "avatar_url": avatar_url,
+            "role": role.value,
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "last_login_at": None,
+            "last_login_ip": None
+        }
+
+        result = await cls._db().insert_one(user_doc)
+        user_doc["_id"] = result.inserted_id
+
+        logger.info("OAuth user created: %s (%s)", username, normalized_provider)
         return cls._serialize(user_doc)
 
     @classmethod
@@ -101,6 +136,14 @@ class User:
         return cls._serialize(user, include_password=True) if user else None
 
     @classmethod
+    async def find_by_oauth_key(cls, provider: str, oauth_sub: str) -> Optional[Dict[str, Any]]:
+        """Find user by OAuth provider + provider subject"""
+        normalized_provider = provider.lower().strip()
+        normalized_oauth_sub = oauth_sub.strip()
+        user = await cls._db().find_one({"oauth_key": f"{normalized_provider}:{normalized_oauth_sub}"})
+        return cls._serialize(user, include_password=True) if user else None
+
+    @classmethod
     async def exists_by_username(cls, username: str) -> bool:
         """Check if username exists"""
         count = await cls._db().count_documents({"username": username.lower().strip()})
@@ -124,6 +167,38 @@ class User:
                 }
             }
         )
+
+    @classmethod
+    async def link_oauth_account(
+        cls,
+        user_id: str,
+        provider: str,
+        oauth_sub: str,
+        avatar_url: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Link an OAuth identity to an existing account"""
+        normalized_provider = provider.lower().strip()
+        normalized_oauth_sub = oauth_sub.strip()
+        update_doc: Dict[str, Any] = {
+            "auth_provider": normalized_provider,
+            "oauth_sub": normalized_oauth_sub,
+            "oauth_key": f"{normalized_provider}:{normalized_oauth_sub}",
+            "updated_at": datetime.utcnow(),
+        }
+        if avatar_url:
+            update_doc["avatar_url"] = avatar_url
+
+        try:
+            result = await cls._db().update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": update_doc}
+            )
+            if result.matched_count == 0:
+                return None
+            updated_user = await cls._db().find_one({"_id": ObjectId(user_id)})
+            return cls._serialize(updated_user)
+        except Exception:
+            return None
 
     @classmethod
     async def find_all(cls, page: int = 1, limit: int = 50, search: Optional[str] = None) -> Dict[str, Any]:
@@ -188,6 +263,8 @@ class User:
             "id": str(user["_id"]),
             "username": user["username"],
             "email": user["email"],
+            "auth_provider": user.get("auth_provider", "local"),
+            "avatar_url": user.get("avatar_url"),
             "role": user["role"],
             "is_active": user["is_active"],
             "created_at": user["created_at"].isoformat() if user.get("created_at") else None,

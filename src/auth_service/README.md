@@ -8,6 +8,8 @@ FastAPI-based centralized authentication and user access control system for the 
 - **Role-Based Access Control (RBAC)**: USER, ANALYST, ADMIN roles with hierarchical permissions
 - **User Management**: Admin panel for user creation, role assignment, and access control
 - **Login/Registration**: Web-based login and self-registration with email validation
+- **Social Sign-In**: Google and GitHub OAuth with secure state validation
+- **Domain Auto-Role**: `@iiitg.ac.in` accounts are automatically assigned `ANALYST`
 - **Security**:
   - Password hashing with bcrypt
   - Brute-force detection and rate limiting
@@ -47,6 +49,10 @@ Key environment variables:
 - `MONGODB_URL`: MongoDB connection string
 - `JWT_SECRET`: Secret key for JWT signing
 - `CORS_ORIGINS`: Comma-separated list of allowed origins
+- `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`: Google OAuth credentials
+- `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET`: GitHub OAuth credentials
+- `GOOGLE_OAUTH_REDIRECT_URI`: Recommended `http://localhost:3000/oauth/google/callback`
+- `GITHUB_OAUTH_REDIRECT_URI`: Recommended `http://localhost:3000/oauth/github/callback`
 
 ### Running the Service
 
@@ -120,6 +126,23 @@ Response: 303 See Other
 Location: /login
 ```
 
+#### OAuth Login
+```
+GET /oauth/google/login
+GET /oauth/github/login
+
+Behavior:
+- Redirects user to provider consent page
+- On callback, creates or links a local account
+- Sets JWT cookie and redirects based on role
+```
+
+#### OAuth Redirect URIs (Provider Console)
+Add these exact callback URLs in your provider dashboards:
+
+- Google OAuth Redirect URI: `http://localhost:3000/oauth/google/callback`
+- GitHub Authorization callback URL: `http://localhost:3000/oauth/github/callback`
+
 ### Admin Endpoints
 
 #### List Users (search required)
@@ -165,7 +188,7 @@ Response: 200 OK
 
 ### Register Page
 - **URL**: `http://localhost:3000/register`
-- **Purpose**: User self-registration (default role: USER)
+- **Purpose**: User self-registration (`@iiitg.ac.in` -> `ANALYST`, others -> `USER`)
 - **Access**: Public (no auth required)
 
 ### Admin Panel

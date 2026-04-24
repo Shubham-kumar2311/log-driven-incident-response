@@ -22,6 +22,32 @@
             padding: 20px;
         }
 
+        .page-actions {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            display: flex;
+            gap: 10px;
+            z-index: 1100;
+        }
+
+        .action-link {
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            padding: 9px 12px;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.09);
+            color: #eef4ff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .action-link:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.45);
+        }
+
         .register-container {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -173,9 +199,65 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .logout-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(3, 8, 20, 0.65);
+            z-index: 1200;
+        }
+
+        .logout-overlay.active {
+            display: flex;
+        }
+
+        .logout-box {
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 18px 24px;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #7fc3ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .logout-text {
+            color: #f0f6ff;
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .page-actions {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+
+            .action-link {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="page-actions">
+        <a href="/logout" class="action-link logout-link">Logout</a>
+    </div>
+
     <div class="register-container">
         <div class="logo">
             <h1>Create Account</h1>
@@ -250,7 +332,25 @@
         </div>
     </div>
 
+    <div id="logout-overlay" class="logout-overlay" aria-live="polite" aria-label="Logging out">
+        <div class="logout-box">
+            <div class="logout-spinner"></div>
+            <div class="logout-text">Logging out...</div>
+        </div>
+    </div>
+
     <script>
+        const logoutOverlay = document.getElementById('logout-overlay');
+        document.querySelectorAll('.logout-link').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                logoutOverlay.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 500);
+            });
+        });
+
         document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
 

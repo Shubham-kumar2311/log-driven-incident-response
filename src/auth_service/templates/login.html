@@ -19,6 +19,33 @@
             align-items: center;
             justify-content: center;
             color: #fff;
+            padding: 20px;
+        }
+
+        .page-actions {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            display: flex;
+            gap: 10px;
+            z-index: 1100;
+        }
+
+        .action-link {
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            padding: 9px 12px;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.09);
+            color: #eef4ff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .action-link:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.45);
         }
 
         .login-container {
@@ -107,6 +134,62 @@
             transform: none;
         }
 
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0 16px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .auth-divider span {
+            padding: 0 10px;
+        }
+
+        .social-auth {
+            display: grid;
+            gap: 10px;
+        }
+
+        .btn-social {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .btn-social:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .btn-social.google {
+            color: #f8fafc;
+        }
+
+        .btn-social.github {
+            color: #e2e8f0;
+        }
+
         .error-message {
             background: rgba(255, 82, 82, 0.2);
             border: 1px solid rgba(255, 82, 82, 0.5);
@@ -164,9 +247,65 @@
             color: rgba(255, 255, 255, 0.3);
             font-size: 12px;
         }
+
+        .logout-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(3, 8, 20, 0.65);
+            z-index: 1200;
+        }
+
+        .logout-overlay.active {
+            display: flex;
+        }
+
+        .logout-box {
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 18px 24px;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #7fc3ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .logout-text {
+            color: #f0f6ff;
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .page-actions {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+
+            .action-link {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="page-actions">
+        <a href="/logout" class="action-link logout-link">Logout</a>
+    </div>
+
     <div class="login-container">
         <div class="logo">
             <h1>Incident Response</h1>
@@ -206,6 +345,13 @@
             </button>
         </form>
 
+        <div class="auth-divider"><span>or continue with</span></div>
+
+        <div class="social-auth">
+            <a href="/oauth/google/login" class="btn-social google">Sign in with Google</a>
+            <a href="/oauth/github/login" class="btn-social github">Sign in with GitHub</a>
+        </div>
+
         <div class="register-link">
             Don't have an account? <a href="/register">Register</a>
         </div>
@@ -213,7 +359,25 @@
         <div class="version">v1.0.0</div>
     </div>
 
+    <div id="logout-overlay" class="logout-overlay" aria-live="polite" aria-label="Logging out">
+        <div class="logout-box">
+            <div class="logout-spinner"></div>
+            <div class="logout-text">Logging out...</div>
+        </div>
+    </div>
+
     <script>
+        const logoutOverlay = document.getElementById('logout-overlay');
+        document.querySelectorAll('.logout-link').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                logoutOverlay.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 500);
+            });
+        });
+
         // Check for error in URL params
         const urlParams = new URLSearchParams(window.location.search);
         const error = urlParams.get('error');

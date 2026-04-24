@@ -48,6 +48,7 @@ class Database:
         await cls.db.users.create_index("username", unique=True)
         await cls.db.users.create_index("email", unique=True)
         await cls.db.users.create_index("role")
+        await cls.db.users.create_index("oauth_key", unique=True, sparse=True)
 
         # Login logs indexes
         await cls.db.login_logs.create_index("user_id")
