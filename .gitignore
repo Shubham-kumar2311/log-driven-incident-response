@@ -81,3 +81,6 @@ src/logs/
 
 # Ignore temp
 temp-to-check/
+
+tempCodeRunnerFile.py/
+tempCodeRunnerFile.py

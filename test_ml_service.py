@@ -16,7 +16,17 @@ for path in (ML_SERVICE_DIR, DETECTION_SERVICE_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-import app as ml_app
+
+def _load_ml_app_module():
+    app_path = ML_SERVICE_DIR / "app.py"
+    spec = importlib.util.spec_from_file_location("ml_service_app", app_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec is not None and spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+ml_app = _load_ml_app_module()
 
 
 def _load_detection_ml_client_class():

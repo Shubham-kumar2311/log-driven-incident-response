@@ -73,6 +73,10 @@ class DetectionStore:
             "timestamp": _now_iso(),
         }
         self._col("feedback").insert_one(feedback)
+        # PyMongo mutates inserted dicts by adding an ObjectId _id, which FastAPI
+        # cannot JSON-encode by default. Normalize it for API responses.
+        if "_id" in feedback:
+            feedback["_id"] = str(feedback["_id"])
         self._persist_record("feedback", feedback)
         logger.info("Feedback captured", extra={"log_id": log_id, "is_false_positive": is_false_positive})
         return feedback
