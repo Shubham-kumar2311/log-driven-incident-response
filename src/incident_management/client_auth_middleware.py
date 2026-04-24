@@ -42,7 +42,9 @@ EXCLUDE_PATHS = [
     "/health",
     "/docs",
     "/openapi.json",
-    "/favicon.ico"
+    "/favicon.ico",
+    "/signals",      # Allow detection service to POST signals without auth
+    "/metrics",      # Allow metrics collection
 ]
 
 

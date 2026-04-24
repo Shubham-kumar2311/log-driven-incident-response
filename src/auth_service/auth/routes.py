@@ -119,6 +119,7 @@ async def require_admin_user(request: Request) -> dict:
 # ============================================================
 
 @router.post("/login")
+
 async def login(request: Request, data: LoginRequest):
     """
     Authenticate user and set JWT cookie.

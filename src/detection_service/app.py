@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from config import LOG_LEVEL, USE_REDIS, HOST, PORT
+from config import LOG_LEVEL, USE_REDIS, HOST, PORT, ML_MODE
+from detection_store import DetectionStore
 from logger import setup_logging
 from metrics import metrics
 from pipeline import DetectionPipeline
@@ -37,6 +38,7 @@ async def lifespan(application: FastAPI):
 
 app = FastAPI(title="Detection Service", version="2.0.0", lifespan=lifespan)
 pipeline = DetectionPipeline()
+store = DetectionStore()
 
 
 # ── Endpoints ───────────────────────────────────────────────────────
@@ -71,13 +73,35 @@ def health():
         "service": "detection-service",
         "mode": "redis" if USE_REDIS else "api",
         "rules_loaded": len(pipeline.rule_engine.rules),
-        "anomaly_detectors": len(pipeline.anomaly_engine.detectors),
+        "ml_mode": ML_MODE,
+        "ml_enabled": ML_MODE in ("runtime", "hybrid") or bool(pipeline.ml_client.url),
+        "runtime_ml": pipeline.ml_client.runtime_snapshot(),
     }
 
 
 @app.get("/metrics")
 def get_metrics():
     return metrics.snapshot()
+
+
+@app.post("/feedback")
+def submit_feedback(payload: dict):
+    log_id = payload.get("log_id")
+    if not log_id:
+        return {"status": "error", "message": "log_id is required"}
+
+    feedback = store.save_feedback(
+        log_id=log_id,
+        is_false_positive=bool(payload.get("is_false_positive", False)),
+        notes=payload.get("notes", ""),
+    )
+    return {"status": "ok", "feedback": feedback}
+
+
+@app.get("/training/labeled-data")
+def labeled_data():
+    samples = store.get_labeled_anomaly_samples()
+    return {"count": len(samples), "samples": samples}
 
 
 if __name__ == "__main__":

@@ -9,3 +9,5 @@ class Incident(BaseModel):
     event_type: str
     timestamp: str
     message: str | None = None
+    receiver_email: str | None = None
+    reciever_email: str | None = None

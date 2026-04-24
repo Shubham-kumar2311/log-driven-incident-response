@@ -1,0 +1,1277 @@
+﻿{
+    "suite_name":  "detection_service_blackbox_api_tests",
+    "suite_version":  "1.0.0",
+    "generated_on":  "2026-04-20",
+    "target_service":  "detection_service",
+    "base_url":  "http://localhost:8003",
+    "default_headers":  {
+                            "Content-Type":  "application/json"
+                        },
+    "assumptions":  [
+                        "Detection service is running and reachable at base_url.",
+                        "Default rulebook from src/detection_service/rulebook.json is loaded.",
+                        "Tests run in listed order to preserve stateful rule thresholds.",
+                        "No authentication middleware is required for these endpoints in local mode."
+                    ],
+    "single_request_tests":  [
+                                 {
+                                     "id":  "TC-DET-001",
+                                     "name":  "Health check returns service metadata",
+                                     "request":  {
+                                                     "method":  "GET",
+                                                     "path":  "/health"
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "required_json_keys":  [
+                                                                                 "status",
+                                                                                 "service",
+                                                                                 "mode",
+                                                                                 "rules_loaded",
+                                                                                 "ml_mode",
+                                                                                 "ml_enabled",
+                                                                                 "runtime_ml"
+                                                                             ],
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.status",
+                                                                                  "equals":  "healthy"
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.service",
+                                                                                  "equals":  "detection-service"
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-002",
+                                     "name":  "Metrics endpoint exposes counters",
+                                     "request":  {
+                                                     "method":  "GET",
+                                                     "path":  "/metrics"
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "required_json_keys":  [
+                                                                                 "events_processed",
+                                                                                 "events_errors",
+                                                                                 "rule_signals_total",
+                                                                                 "anomaly_signals_total",
+                                                                                 "signals_total",
+                                                                                 "events_per_second",
+                                                                                 "uptime_seconds",
+                                                                                 "rule_hits",
+                                                                                 "anomaly_hits"
+                                                                             ],
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.events_processed",
+                                                                                  "type":  "number"
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-003",
+                                     "name":  "Single high-latency event should produce at least one detection signal",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/detect",
+                                                     "body":  {
+                                                                  "event_id":  "bb-latency-001",
+                                                                  "timestamp":  "2026-04-20T10:00:00Z",
+                                                                  "processed_at":  "2026-04-20T10:00:00.050Z",
+                                                                  "service_name":  "api-gateway",
+                                                                  "category":  "application",
+                                                                  "environment":  "prod",
+                                                                  "log_level":  "WARN",
+                                                                  "event_type":  "http.request",
+                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                  "severity":  "MEDIUM",
+                                                                  "message":  "Slow request detected",
+                                                                  "trace_id":  "trace-bb-latency-001",
+                                                                  "span_id":  "span-bb-latency-001",
+                                                                  "region":  "us-east-1",
+                                                                  "risk_score":  0.5,
+                                                                  "tags":  [
+                                                                               "api-gateway",
+                                                                               "application"
+                                                                           ],
+                                                                  "features":  {
+                                                                                   "service":  "api-gateway",
+                                                                                   "severity":  "MEDIUM"
+                                                                               },
+                                                                  "metadata":  {
+                                                                                   "http_method":  "GET",
+                                                                                   "path":  "/api/v1/orders",
+                                                                                   "status":  200,
+                                                                                   "latency_ms":  4500,
+                                                                                   "client_ip":  "10.10.1.5"
+                                                                               }
+                                                              }
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.signals",
+                                                                                  "min_items":  1
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.signals[0].signal_type",
+                                                                                  "equals":  "HYBRID_ANOMALY"
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.signals[0].metadata.rule_type",
+                                                                                  "contains":  "HIGH_LATENCY"
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-004",
+                                     "name":  "Deployment failed event should be detected",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/detect",
+                                                     "body":  {
+                                                                  "event_id":  "bb-deploy-001",
+                                                                  "timestamp":  "2026-04-20T10:01:00Z",
+                                                                  "processed_at":  "2026-04-20T10:01:00.050Z",
+                                                                  "service_name":  "deployment-service",
+                                                                  "category":  "deployment",
+                                                                  "environment":  "prod",
+                                                                  "log_level":  "ERROR",
+                                                                  "event_type":  "deployment.failed",
+                                                                  "normalized_type":  "DEPLOYMENT_FAILED",
+                                                                  "severity":  "HIGH",
+                                                                  "message":  "Deployment failed for v2.5.0",
+                                                                  "trace_id":  "trace-bb-deploy-001",
+                                                                  "span_id":  "span-bb-deploy-001",
+                                                                  "region":  "us-east-1",
+                                                                  "risk_score":  0.5,
+                                                                  "tags":  [
+                                                                               "deployment-service",
+                                                                               "deployment"
+                                                                           ],
+                                                                  "features":  {
+                                                                                   "service":  "deployment-service",
+                                                                                   "severity":  "HIGH"
+                                                                               },
+                                                                  "metadata":  {
+                                                                                   "version":  "v2.5.0",
+                                                                                   "reason":  "container_crash",
+                                                                                   "replicas":  3
+                                                                               }
+                                                              }
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.signals",
+                                                                                  "min_items":  1
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.signals[0].metadata.rule_type",
+                                                                                  "contains":  "DEPLOYMENT_FAILURE"
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-005",
+                                     "name":  "Batch detection should process all events and return aggregated signals",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/detect/batch",
+                                                     "body":  {
+                                                                  "events":  [
+                                                                                 {
+                                                                                     "event_id":  "bb-batch-001",
+                                                                                     "timestamp":  "2026-04-20T10:02:00Z",
+                                                                                     "processed_at":  "2026-04-20T10:02:00.050Z",
+                                                                                     "service_name":  "api-gateway",
+                                                                                     "category":  "application",
+                                                                                     "environment":  "prod",
+                                                                                     "log_level":  "WARN",
+                                                                                     "event_type":  "http.request",
+                                                                                     "normalized_type":  "HTTP_REQUEST",
+                                                                                     "severity":  "MEDIUM",
+                                                                                     "message":  "Normal request",
+                                                                                     "trace_id":  "trace-bb-batch-001",
+                                                                                     "span_id":  "span-bb-batch-001",
+                                                                                     "region":  "us-east-1",
+                                                                                     "risk_score":  0.5,
+                                                                                     "tags":  [
+                                                                                                  "api-gateway",
+                                                                                                  "application"
+                                                                                              ],
+                                                                                     "features":  {
+                                                                                                      "service":  "api-gateway",
+                                                                                                      "severity":  "MEDIUM"
+                                                                                                  },
+                                                                                     "metadata":  {
+                                                                                                      "status":  200,
+                                                                                                      "latency_ms":  45,
+                                                                                                      "path":  "/health"
+                                                                                                  }
+                                                                                 },
+                                                                                 {
+                                                                                     "event_id":  "bb-batch-002",
+                                                                                     "timestamp":  "2026-04-20T10:02:02Z",
+                                                                                     "processed_at":  "2026-04-20T10:02:02.050Z",
+                                                                                     "service_name":  "db-service",
+                                                                                     "category":  "database",
+                                                                                     "environment":  "prod",
+                                                                                     "log_level":  "WARN",
+                                                                                     "event_type":  "db.query",
+                                                                                     "normalized_type":  "DB_QUERY",
+                                                                                     "severity":  "MEDIUM",
+                                                                                     "message":  "Slow query detected",
+                                                                                     "trace_id":  "trace-bb-batch-002",
+                                                                                     "span_id":  "span-bb-batch-002",
+                                                                                     "region":  "us-east-1",
+                                                                                     "risk_score":  0.5,
+                                                                                     "tags":  [
+                                                                                                  "db-service",
+                                                                                                  "database"
+                                                                                              ],
+                                                                                     "features":  {
+                                                                                                      "service":  "db-service",
+                                                                                                      "severity":  "MEDIUM"
+                                                                                                  },
+                                                                                     "metadata":  {
+                                                                                                      "query":  "SELECT * FROM orders",
+                                                                                                      "latency_ms":  4200
+                                                                                                  }
+                                                                                 },
+                                                                                 {
+                                                                                     "event_id":  "bb-batch-003",
+                                                                                     "timestamp":  "2026-04-20T10:02:04Z",
+                                                                                     "processed_at":  "2026-04-20T10:02:04.050Z",
+                                                                                     "service_name":  "deployment-service",
+                                                                                     "category":  "deployment",
+                                                                                     "environment":  "prod",
+                                                                                     "log_level":  "ERROR",
+                                                                                     "event_type":  "deployment.failed",
+                                                                                     "normalized_type":  "DEPLOYMENT_FAILED",
+                                                                                     "severity":  "HIGH",
+                                                                                     "message":  "Deployment failed in canary",
+                                                                                     "trace_id":  "trace-bb-batch-003",
+                                                                                     "span_id":  "span-bb-batch-003",
+                                                                                     "region":  "us-east-1",
+                                                                                     "risk_score":  0.5,
+                                                                                     "tags":  [
+                                                                                                  "deployment-service",
+                                                                                                  "deployment"
+                                                                                              ],
+                                                                                     "features":  {
+                                                                                                      "service":  "deployment-service",
+                                                                                                      "severity":  "HIGH"
+                                                                                                  },
+                                                                                     "metadata":  {
+                                                                                                      "version":  "v2.5.1",
+                                                                                                      "reason":  "image_pull_error"
+                                                                                                  }
+                                                                                 }
+                                                                             ]
+                                                              }
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.events_received",
+                                                                                  "equals":  3
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.signals",
+                                                                                  "min_items":  2
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-006",
+                                     "name":  "Invalid payload type for /detect should return validation error",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/detect",
+                                                     "body":  [
+                                                                  {
+                                                                      "unexpected":  "array_body"
+                                                                  }
+                                                              ]
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  422,
+                                                      "required_json_keys":  [
+                                                                                 "detail"
+                                                                             ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-007",
+                                     "name":  "Invalid payload type for /detect/batch should return validation error",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/detect/batch",
+                                                     "body":  "not-an-object"
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  422,
+                                                      "required_json_keys":  [
+                                                                                 "detail"
+                                                                             ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-008",
+                                     "name":  "Missing events key in batch payload should return empty result",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/detect/batch",
+                                                     "body":  {
+                                                                  "unexpected":  "value"
+                                                              }
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.events_received",
+                                                                                  "equals":  0
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.signals",
+                                                                                  "items":  0
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-009",
+                                     "name":  "Feedback without log_id should return business error",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/feedback",
+                                                     "body":  {
+                                                                  "is_false_positive":  true,
+                                                                  "notes":  "Missing log id check"
+                                                              }
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.status",
+                                                                                  "equals":  "error"
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.message",
+                                                                                  "equals":  "log_id is required"
+                                                                              }
+                                                                          ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-010",
+                                     "name":  "Feedback with log_id should be accepted",
+                                     "request":  {
+                                                     "method":  "POST",
+                                                     "path":  "/feedback",
+                                                     "body":  {
+                                                                  "log_id":  "bb-latency-001",
+                                                                  "is_false_positive":  false,
+                                                                  "notes":  "Confirmed true anomaly"
+                                                              }
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.status",
+                                                                                  "equals":  "ok"
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.feedback.log_id",
+                                                                                  "equals":  "bb-latency-001"
+                                                                              }
+                                                                          ],
+                                                      "required_json_keys":  [
+                                                                                 "feedback"
+                                                                             ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "TC-DET-011",
+                                     "name":  "Labeled data endpoint should return count and sample list",
+                                     "request":  {
+                                                     "method":  "GET",
+                                                     "path":  "/training/labeled-data"
+                                                 },
+                                     "expected":  {
+                                                      "status_code":  200,
+                                                      "required_json_keys":  [
+                                                                                 "count",
+                                                                                 "samples"
+                                                                             ],
+                                                      "json_assertions":  [
+                                                                              {
+                                                                                  "path":  "$.count",
+                                                                                  "type":  "number"
+                                                                              },
+                                                                              {
+                                                                                  "path":  "$.samples",
+                                                                                  "type":  "array"
+                                                                              }
+                                                                          ]
+                                                  }
+                                 }
+                             ],
+    "stateful_scenarios":  [
+                               {
+                                   "id":  "SCN-DET-001",
+                                   "name":  "Brute force threshold test (5 failed logins from same IP)",
+                                   "description":  "Rule brute_force_login should fire on the 5th auth.login_failed event for the same client_ip.",
+                                   "steps":  [
+                                                 {
+                                                     "step_id":  "SCN-DET-001-1",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-auth-001",
+                                                                                  "timestamp":  "2026-04-20T10:10:01Z",
+                                                                                  "processed_at":  "2026-04-20T10:10:01.050Z",
+                                                                                  "service_name":  "auth-service",
+                                                                                  "category":  "security",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "auth.login_failed",
+                                                                                  "normalized_type":  "AUTH_LOGIN_FAILED",
+                                                                                  "severity":  "HIGH",
+                                                                                  "message":  "Invalid login attempt",
+                                                                                  "trace_id":  "trace-bb-auth-001",
+                                                                                  "span_id":  "span-bb-auth-001",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "auth-service",
+                                                                                               "security"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "auth-service",
+                                                                                                   "severity":  "HIGH"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "username":  "admin",
+                                                                                                   "client_ip":  "192.168.99.50",
+                                                                                                   "reason":  "invalid_password"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-001-2",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-auth-002",
+                                                                                  "timestamp":  "2026-04-20T10:10:02Z",
+                                                                                  "processed_at":  "2026-04-20T10:10:02.050Z",
+                                                                                  "service_name":  "auth-service",
+                                                                                  "category":  "security",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "auth.login_failed",
+                                                                                  "normalized_type":  "AUTH_LOGIN_FAILED",
+                                                                                  "severity":  "HIGH",
+                                                                                  "message":  "Invalid login attempt",
+                                                                                  "trace_id":  "trace-bb-auth-002",
+                                                                                  "span_id":  "span-bb-auth-002",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "auth-service",
+                                                                                               "security"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "auth-service",
+                                                                                                   "severity":  "HIGH"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "username":  "admin",
+                                                                                                   "client_ip":  "192.168.99.50",
+                                                                                                   "reason":  "invalid_password"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-001-3",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-auth-003",
+                                                                                  "timestamp":  "2026-04-20T10:10:03Z",
+                                                                                  "processed_at":  "2026-04-20T10:10:03.050Z",
+                                                                                  "service_name":  "auth-service",
+                                                                                  "category":  "security",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "auth.login_failed",
+                                                                                  "normalized_type":  "AUTH_LOGIN_FAILED",
+                                                                                  "severity":  "HIGH",
+                                                                                  "message":  "Invalid login attempt",
+                                                                                  "trace_id":  "trace-bb-auth-003",
+                                                                                  "span_id":  "span-bb-auth-003",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "auth-service",
+                                                                                               "security"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "auth-service",
+                                                                                                   "severity":  "HIGH"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "username":  "admin",
+                                                                                                   "client_ip":  "192.168.99.50",
+                                                                                                   "reason":  "invalid_password"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-001-4",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-auth-004",
+                                                                                  "timestamp":  "2026-04-20T10:10:04Z",
+                                                                                  "processed_at":  "2026-04-20T10:10:04.050Z",
+                                                                                  "service_name":  "auth-service",
+                                                                                  "category":  "security",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "auth.login_failed",
+                                                                                  "normalized_type":  "AUTH_LOGIN_FAILED",
+                                                                                  "severity":  "HIGH",
+                                                                                  "message":  "Invalid login attempt",
+                                                                                  "trace_id":  "trace-bb-auth-004",
+                                                                                  "span_id":  "span-bb-auth-004",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "auth-service",
+                                                                                               "security"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "auth-service",
+                                                                                                   "severity":  "HIGH"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "username":  "admin",
+                                                                                                   "client_ip":  "192.168.99.50",
+                                                                                                   "reason":  "invalid_password"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-001-5",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-auth-005",
+                                                                                  "timestamp":  "2026-04-20T10:10:05Z",
+                                                                                  "processed_at":  "2026-04-20T10:10:05.050Z",
+                                                                                  "service_name":  "auth-service",
+                                                                                  "category":  "security",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "auth.login_failed",
+                                                                                  "normalized_type":  "AUTH_LOGIN_FAILED",
+                                                                                  "severity":  "HIGH",
+                                                                                  "message":  "Invalid login attempt",
+                                                                                  "trace_id":  "trace-bb-auth-005",
+                                                                                  "span_id":  "span-bb-auth-005",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "auth-service",
+                                                                                               "security"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "auth-service",
+                                                                                                   "severity":  "HIGH"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "username":  "admin",
+                                                                                                   "client_ip":  "192.168.99.50",
+                                                                                                   "reason":  "invalid_password"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200,
+                                                                      "json_assertions":  [
+                                                                                              {
+                                                                                                  "path":  "$.signals",
+                                                                                                  "min_items":  1
+                                                                                              },
+                                                                                              {
+                                                                                                  "path":  "$.signals[0].metadata.rule_type",
+                                                                                                  "contains":  "BRUTE_FORCE_LOGIN"
+                                                                                              }
+                                                                                          ]
+                                                                  }
+                                                 }
+                                             ]
+                               },
+                               {
+                                   "id":  "SCN-DET-002",
+                                   "name":  "Cache connection error threshold test (5 events)",
+                                   "description":  "Rule cache_connection_error should fire on the 5th cache/redis connection error event inside the window.",
+                                   "steps":  [
+                                                 {
+                                                     "step_id":  "SCN-DET-002-1",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-cache-001",
+                                                                                  "timestamp":  "2026-04-20T10:12:01Z",
+                                                                                  "processed_at":  "2026-04-20T10:12:01.050Z",
+                                                                                  "service_name":  "cache-service",
+                                                                                  "category":  "infrastructure",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "ERROR",
+                                                                                  "event_type":  "cache.connection",
+                                                                                  "normalized_type":  "CACHE_CONNECTION",
+                                                                                  "severity":  "ERROR",
+                                                                                  "message":  "Redis connection timeout while writing key",
+                                                                                  "trace_id":  "trace-bb-cache-001",
+                                                                                  "span_id":  "span-bb-cache-001",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "cache-service",
+                                                                                               "infrastructure"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "cache-service",
+                                                                                                   "severity":  "ERROR"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "node":  "redis-1"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-002-2",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-cache-002",
+                                                                                  "timestamp":  "2026-04-20T10:12:02Z",
+                                                                                  "processed_at":  "2026-04-20T10:12:02.050Z",
+                                                                                  "service_name":  "cache-service",
+                                                                                  "category":  "infrastructure",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "ERROR",
+                                                                                  "event_type":  "cache.connection",
+                                                                                  "normalized_type":  "CACHE_CONNECTION",
+                                                                                  "severity":  "ERROR",
+                                                                                  "message":  "Redis connection timeout while writing key",
+                                                                                  "trace_id":  "trace-bb-cache-002",
+                                                                                  "span_id":  "span-bb-cache-002",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "cache-service",
+                                                                                               "infrastructure"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "cache-service",
+                                                                                                   "severity":  "ERROR"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "node":  "redis-1"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-002-3",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-cache-003",
+                                                                                  "timestamp":  "2026-04-20T10:12:03Z",
+                                                                                  "processed_at":  "2026-04-20T10:12:03.050Z",
+                                                                                  "service_name":  "cache-service",
+                                                                                  "category":  "infrastructure",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "ERROR",
+                                                                                  "event_type":  "cache.connection",
+                                                                                  "normalized_type":  "CACHE_CONNECTION",
+                                                                                  "severity":  "ERROR",
+                                                                                  "message":  "Redis connection timeout while writing key",
+                                                                                  "trace_id":  "trace-bb-cache-003",
+                                                                                  "span_id":  "span-bb-cache-003",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "cache-service",
+                                                                                               "infrastructure"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "cache-service",
+                                                                                                   "severity":  "ERROR"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "node":  "redis-1"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-002-4",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-cache-004",
+                                                                                  "timestamp":  "2026-04-20T10:12:04Z",
+                                                                                  "processed_at":  "2026-04-20T10:12:04.050Z",
+                                                                                  "service_name":  "cache-service",
+                                                                                  "category":  "infrastructure",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "ERROR",
+                                                                                  "event_type":  "cache.connection",
+                                                                                  "normalized_type":  "CACHE_CONNECTION",
+                                                                                  "severity":  "ERROR",
+                                                                                  "message":  "Redis connection timeout while writing key",
+                                                                                  "trace_id":  "trace-bb-cache-004",
+                                                                                  "span_id":  "span-bb-cache-004",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "cache-service",
+                                                                                               "infrastructure"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "cache-service",
+                                                                                                   "severity":  "ERROR"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "node":  "redis-1"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-002-5",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-cache-005",
+                                                                                  "timestamp":  "2026-04-20T10:12:05Z",
+                                                                                  "processed_at":  "2026-04-20T10:12:05.050Z",
+                                                                                  "service_name":  "cache-service",
+                                                                                  "category":  "infrastructure",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "ERROR",
+                                                                                  "event_type":  "cache.connection",
+                                                                                  "normalized_type":  "CACHE_CONNECTION",
+                                                                                  "severity":  "ERROR",
+                                                                                  "message":  "Redis connection timeout while writing key",
+                                                                                  "trace_id":  "trace-bb-cache-005",
+                                                                                  "span_id":  "span-bb-cache-005",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "cache-service",
+                                                                                               "infrastructure"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "cache-service",
+                                                                                                   "severity":  "ERROR"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "node":  "redis-1"
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200,
+                                                                      "json_assertions":  [
+                                                                                              {
+                                                                                                  "path":  "$.signals",
+                                                                                                  "min_items":  1
+                                                                                              },
+                                                                                              {
+                                                                                                  "path":  "$.signals[0].metadata.rule_type",
+                                                                                                  "contains":  "CACHE_CONNECTION_ERROR"
+                                                                                              }
+                                                                                          ]
+                                                                  }
+                                                 }
+                                             ]
+                               },
+                               {
+                                   "id":  "SCN-DET-003",
+                                   "name":  "HTTP 500 spike threshold test (10 events)",
+                                   "description":  "Rule http_error_spike should fire on the 10th HTTP 500+ event in the sliding window.",
+                                   "steps":  [
+                                                 {
+                                                     "step_id":  "SCN-DET-003-1",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-001",
+                                                                                  "timestamp":  "2026-04-20T10:15:01Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:01.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-001",
+                                                                                  "span_id":  "span-bb-http500-001",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  250
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-2",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-002",
+                                                                                  "timestamp":  "2026-04-20T10:15:02Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:02.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-002",
+                                                                                  "span_id":  "span-bb-http500-002",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  240
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-3",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-003",
+                                                                                  "timestamp":  "2026-04-20T10:15:03Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:03.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-003",
+                                                                                  "span_id":  "span-bb-http500-003",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  220
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-4",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-004",
+                                                                                  "timestamp":  "2026-04-20T10:15:04Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:04.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-004",
+                                                                                  "span_id":  "span-bb-http500-004",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  230
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-5",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-005",
+                                                                                  "timestamp":  "2026-04-20T10:15:05Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:05.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-005",
+                                                                                  "span_id":  "span-bb-http500-005",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  235
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-6",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-006",
+                                                                                  "timestamp":  "2026-04-20T10:15:06Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:06.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-006",
+                                                                                  "span_id":  "span-bb-http500-006",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  245
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-7",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-007",
+                                                                                  "timestamp":  "2026-04-20T10:15:07Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:07.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-007",
+                                                                                  "span_id":  "span-bb-http500-007",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  225
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-8",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-008",
+                                                                                  "timestamp":  "2026-04-20T10:15:08Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:08.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-008",
+                                                                                  "span_id":  "span-bb-http500-008",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  232
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-9",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-009",
+                                                                                  "timestamp":  "2026-04-20T10:15:09Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:09.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-009",
+                                                                                  "span_id":  "span-bb-http500-009",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  229
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200
+                                                                  }
+                                                 },
+                                                 {
+                                                     "step_id":  "SCN-DET-003-10",
+                                                     "request":  {
+                                                                     "method":  "POST",
+                                                                     "path":  "/detect",
+                                                                     "body":  {
+                                                                                  "event_id":  "bb-http500-010",
+                                                                                  "timestamp":  "2026-04-20T10:15:10Z",
+                                                                                  "processed_at":  "2026-04-20T10:15:10.050Z",
+                                                                                  "service_name":  "api-gateway",
+                                                                                  "category":  "application",
+                                                                                  "environment":  "prod",
+                                                                                  "log_level":  "WARN",
+                                                                                  "event_type":  "http.request",
+                                                                                  "normalized_type":  "HTTP_REQUEST",
+                                                                                  "severity":  "MEDIUM",
+                                                                                  "message":  "500 response",
+                                                                                  "trace_id":  "trace-bb-http500-010",
+                                                                                  "span_id":  "span-bb-http500-010",
+                                                                                  "region":  "us-east-1",
+                                                                                  "risk_score":  0.5,
+                                                                                  "tags":  [
+                                                                                               "api-gateway",
+                                                                                               "application"
+                                                                                           ],
+                                                                                  "features":  {
+                                                                                                   "service":  "api-gateway",
+                                                                                                   "severity":  "MEDIUM"
+                                                                                               },
+                                                                                  "metadata":  {
+                                                                                                   "path":  "/api/v1/orders",
+                                                                                                   "status":  500,
+                                                                                                   "latency_ms":  231
+                                                                                               }
+                                                                              }
+                                                                 },
+                                                     "expected":  {
+                                                                      "status_code":  200,
+                                                                      "json_assertions":  [
+                                                                                              {
+                                                                                                  "path":  "$.signals",
+                                                                                                  "min_items":  1
+                                                                                              },
+                                                                                              {
+                                                                                                  "path":  "$.signals[0].metadata.rule_type",
+                                                                                                  "contains":  "HTTP_ERROR_SPIKE"
+                                                                                              }
+                                                                                          ]
+                                                                  }
+                                                 }
+                                             ]
+                               }
+                           ]
+}

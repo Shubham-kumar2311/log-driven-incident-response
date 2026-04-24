@@ -22,6 +22,5 @@ EMAIL_TO = os.getenv("EMAIL_TO", "")
 
 EMAIL_CONFIG_VALID = all([
     SMTP_USER,
-    SMTP_PASSWORD,
-    EMAIL_TO
+    SMTP_PASSWORD
 ])
