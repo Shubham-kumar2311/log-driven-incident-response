@@ -22,10 +22,12 @@ CORS_ORIGINS = _csv_env(
     "CORS_ORIGINS",
     "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8005",
 )
+ACTUATOR_API_URL = os.getenv("ACTUATOR_API_URL", "http://localhost:8007")
 
 # Redis Channels/Streams
 INCIDENT_STREAM = os.getenv("INCIDENT_STREAM", "incident_events")
 RESPONSE_STREAM = os.getenv("RESPONSE_STREAM", "response_events")
+ACTUATOR_STREAM = os.getenv("ACTUATOR_STREAM", "actuator_events")
 CONSUMER_GROUP = os.getenv("CONSUMER_GROUP", "response_service_group")
 CONSUMER_NAME = os.getenv("CONSUMER_NAME", "response_worker_1")
 

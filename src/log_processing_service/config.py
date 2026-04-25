@@ -34,7 +34,8 @@ DEFAULT_CLUSTER = os.getenv("DEFAULT_CLUSTER", "prod-cluster")
 DEFAULT_ENVIRONMENT = os.getenv("DEFAULT_ENVIRONMENT", "production")
 
 # --- Forwarding ---
-DETECT_API = os.getenv("DETECT_API", "http://localhost:8003/detect")
+DETECT_API = os.getenv("DETECT_API", "http://localhost:8003/detect").strip()
+DETECT_API_TIMEOUT_SECONDS = float(os.getenv("DETECT_API_TIMEOUT_SECONDS", "20"))
 
 # --- Logging ---
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

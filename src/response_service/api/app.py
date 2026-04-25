@@ -1,8 +1,13 @@
 import logging
 import asyncio
+import json
+import urllib.error
+import urllib.parse
+import urllib.request
 from contextlib import asynccontextmanager
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+import redis
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +17,15 @@ from pydantic import BaseModel, Field
 import sys
 sys.path.insert(0, "..")
 
-from config import USE_REDIS, LOG_LEVEL, CORS_ORIGINS
+from config import (
+    USE_REDIS,
+    LOG_LEVEL,
+    CORS_ORIGINS,
+    REDIS_HOST,
+    REDIS_PORT,
+    ACTUATOR_API_URL,
+    ACTUATOR_STREAM,
+)
 from db.mongo_client import mongo_client
 from repository.playbook_repository import PlaybookRepository
 from engine.playbook_engine import PlaybookEngine
@@ -137,6 +150,141 @@ app.add_middleware(AuthMiddlewareASGI, required_role="ADMIN")
 # Repository and engine instances
 repository = PlaybookRepository()
 engine = PlaybookEngine(repository)
+
+
+def _recent_actuator_solution_cards(limit: int) -> List[Dict[str, Any]]:
+    """Fetch recent actuator events and normalize them into UI card objects."""
+    if not USE_REDIS:
+        return []
+
+    safe_limit = max(1, min(limit, 100))
+    client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+
+    try:
+        messages = client.xrevrange(ACTUATOR_STREAM, count=safe_limit)
+        cards: List[Dict[str, Any]] = []
+
+        for message_id, fields in messages:
+            payload: Dict[str, Any] = {}
+            raw_data = fields.get("data")
+            if raw_data:
+                try:
+                    payload = json.loads(raw_data)
+                except json.JSONDecodeError:
+                    logger.warning("Skipping invalid actuator payload for message %s", message_id)
+                    continue
+
+            if not isinstance(payload, dict):
+                continue
+
+            source_event = payload.get("source_event")
+            if not isinstance(source_event, dict):
+                source_event = {}
+
+            event_details = payload.get("event_details")
+            if not isinstance(event_details, dict):
+                maybe_details = source_event.get("details")
+                event_details = maybe_details if isinstance(maybe_details, dict) else {}
+
+            signal_type = (
+                payload.get("problem")
+                or payload.get("signal_type")
+                or source_event.get("signal_type")
+                or source_event.get("error")
+                or source_event.get("type")
+            )
+
+            detail_payload = payload.get("detail")
+            if isinstance(detail_payload, dict):
+                event_details = detail_payload
+
+            cards.append({
+                "message_id": message_id,
+                "incident_id": payload.get("incident_id", "unknown"),
+                "service_name": payload.get("service_name"),
+                "signal_type": signal_type,
+                "problem": payload.get("problem") or signal_type,
+                "action": payload.get("action", "unknown"),
+                "status": payload.get("execution_status", "unknown"),
+                "solution": payload.get("solution") or payload.get("output") or "No solution output provided.",
+                "event_details": event_details,
+                "detail": payload.get("detail"),
+                "published_at": payload.get("published_at"),
+                "executed_at": payload.get("executed_at"),
+                "duration_ms": payload.get("duration_ms"),
+            })
+
+        return cards
+    finally:
+        client.close()
+
+
+def _recent_actuator_solution_cards_from_api(limit: int) -> List[Dict[str, Any]]:
+    """Fetch recent actuator executions directly from actuator API history endpoint."""
+    safe_limit = max(1, min(limit, 100))
+    query = urllib.parse.urlencode({"limit": safe_limit})
+    history_url = f"{ACTUATOR_API_URL.rstrip('/')}/history?{query}"
+
+    request = urllib.request.Request(
+        url=history_url,
+        method="GET",
+        headers={"Accept": "application/json"},
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=6) as response:
+            raw_body = response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        raw_body = exc.read().decode("utf-8", errors="replace")
+        logger.error("Actuator history API returned %s: %s", exc.code, raw_body[:300])
+        raise RuntimeError(f"Actuator history API error: HTTP {exc.code}")
+    except urllib.error.URLError as exc:
+        reason = str(exc.reason) if getattr(exc, "reason", None) else str(exc)
+        logger.error("Actuator history API unavailable at %s: %s", history_url, reason)
+        raise RuntimeError("Actuator history API unavailable")
+
+    try:
+        payload = json.loads(raw_body) if raw_body else {}
+    except json.JSONDecodeError as exc:
+        logger.error("Invalid JSON from actuator history API: %s", exc)
+        raise RuntimeError("Invalid response from actuator history API")
+
+    executions = payload.get("executions", []) if isinstance(payload, dict) else []
+    if not isinstance(executions, list):
+        executions = []
+
+    cards: List[Dict[str, Any]] = []
+    for idx, execution in enumerate(executions):
+        if not isinstance(execution, dict):
+            continue
+
+        details = execution.get("details")
+        details = details if isinstance(details, dict) else {}
+
+        incident_id = execution.get("incident_id", "unknown")
+        executed_at = execution.get("executed_at")
+        action = execution.get("action", "unknown")
+        message_id = f"history-{incident_id}-{action}-{executed_at or idx}"
+
+        cards.append(
+            {
+                "message_id": message_id,
+                "incident_id": incident_id,
+                "service_name": execution.get("service_name"),
+                "signal_type": execution.get("problem") or details.get("signal_type") or details.get("error") or details.get("type"),
+                "problem": execution.get("problem") or details.get("signal_type") or details.get("error") or details.get("type"),
+                "action": action,
+                "status": execution.get("execution_status", "unknown"),
+                "solution": execution.get("output") or details.get("solution") or "No solution output provided.",
+                "event_details": execution.get("detail") if isinstance(execution.get("detail"), dict) else details,
+                "detail": execution.get("detail"),
+                "published_at": None,
+                "executed_at": executed_at,
+                "duration_ms": execution.get("duration_ms"),
+            }
+        )
+
+    return cards
 
 
 # --- Health Endpoints ---
@@ -324,4 +472,38 @@ async def list_available_actions():
                 "parameters": ["channel"]
             }
         ]
+    }
+
+
+@app.get("/actuator/solutions")
+async def get_actuator_solutions(limit: int = 20):
+    """Return recent actuator execution outcomes for response UI cards."""
+    source = "redis_stream"
+
+    if USE_REDIS:
+        try:
+            items = _recent_actuator_solution_cards(limit)
+        except redis.RedisError as exc:
+            logger.error("Failed reading actuator stream '%s': %s", ACTUATOR_STREAM, exc)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to fetch actuator solutions right now",
+            )
+    else:
+        source = "actuator_history_api"
+        try:
+            items = _recent_actuator_solution_cards_from_api(limit)
+        except RuntimeError as exc:
+            logger.error("Failed reading actuator history API '%s': %s", ACTUATOR_API_URL, exc)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to fetch actuator solutions right now",
+            )
+
+    return {
+        "items": items,
+        "count": len(items),
+        "stream": ACTUATOR_STREAM,
+        "redis_enabled": USE_REDIS,
+        "source": source,
     }

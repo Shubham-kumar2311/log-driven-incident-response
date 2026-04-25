@@ -46,6 +46,7 @@ EXCLUDE_PATHS = [
     "/simulate-response",  # Allow incident management to trigger responses without auth
     "/simulate",           # Allow simulation endpoint
     "/actions",            # Allow actions listing
+    "/actuator/solutions", # Allow actuator solution cards endpoint
     "/metrics",            # Allow metrics collection
 ]
 

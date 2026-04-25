@@ -197,15 +197,15 @@ DASHBOARD_HTML = r"""
       font-family: monospace;
     }
 
-    /* Execution table */
-    .table-container {
+    /* Execution cards */
+    .executions-panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
     }
 
-    .table-header {
+    .executions-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -214,14 +214,106 @@ DASHBOARD_HTML = r"""
       background: var(--surface2);
     }
 
-    .table-title {
+    .executions-title {
       font-size: 14px;
       font-weight: 600;
     }
 
-    .table-controls {
+    .executions-controls {
       display: flex;
       gap: 8px;
+    }
+
+    .executions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .execution-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--surface2), var(--surface3));
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .execution-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+
+    .execution-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .execution-main {
+      display: grid;
+      gap: 6px;
+    }
+
+    .execution-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .meta-item {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: rgba(13, 17, 23, 0.35);
+      padding: 6px;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: var(--text3);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .execution-output {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: rgba(13, 17, 23, 0.45);
+      padding: 8px;
+      color: var(--text2);
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 54px;
+    }
+
+    .execution-details {
+      display: grid;
+      gap: 5px;
+      border-top: 1px dashed var(--border);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .detail-row span {
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .btn {
@@ -249,38 +341,6 @@ DASHBOARD_HTML = r"""
     .btn-primary:hover {
       background: rgba(88, 166, 255, 0.25);
       border-color: var(--accent);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text3);
-      background: var(--surface);
-    }
-
-    td {
-      font-size: 13px;
-    }
-
-    tr:hover td {
-      background: var(--surface2);
-    }
-
-    tr:last-child td {
-      border-bottom: none;
     }
 
     /* Status badges */
@@ -349,16 +409,6 @@ DASHBOARD_HTML = r"""
       font-size: 12px;
     }
 
-    /* Output cell */
-    .output-cell {
-      max-width: 300px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--text2);
-      font-size: 12px;
-    }
-
     /* Empty state */
     .empty-state {
       text-align: center;
@@ -388,12 +438,8 @@ DASHBOARD_HTML = r"""
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .table-container {
-        overflow-x: auto;
-      }
-
-      table {
-        min-width: 700px;
+      .executions-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -450,35 +496,20 @@ DASHBOARD_HTML = r"""
     </div>
   </div>
 
-  <!-- Execution History Table -->
-  <div class="table-container">
-    <div class="table-header">
-      <span class="table-title">Recent Executions</span>
-      <div class="table-controls">
+  <!-- Execution Cards -->
+  <div class="executions-panel">
+    <div class="executions-header">
+      <span class="executions-title">Recent Executions</span>
+      <div class="executions-controls">
         <button class="btn" onclick="refreshData()">Refresh</button>
       </div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Incident ID</th>
-          <th>Action</th>
-          <th>Status</th>
-          <th>Mode</th>
-          <th>Duration</th>
-          <th>Output</th>
-          <th>Executed At</th>
-        </tr>
-      </thead>
-      <tbody id="executions-table">
-        <tr>
-          <td colspan="7" class="empty-state">
-            <div class="empty-state-icon">&#9881;</div>
-            <div>No executions yet</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div id="executions-grid" class="executions-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon">&#9881;</div>
+        <div>No executions yet</div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -529,17 +560,27 @@ DASHBOARD_HTML = r"""
     ).join('');
   }
 
-  function updateTable(executions) {
-    const tbody = document.getElementById('executions-table');
+  function valuePreview(value) {
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
+
+  function updateExecutionCards(executions) {
+    const container = document.getElementById('executions-grid');
 
     if (!executions || executions.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" class="empty-state">
-            <div class="empty-state-icon">&#9881;</div>
-            <div>No executions yet</div>
-          </td>
-        </tr>
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">&#9881;</div>
+          <div>No executions yet</div>
+        </div>
       `;
       return;
     }
@@ -547,17 +588,80 @@ DASHBOARD_HTML = r"""
     const isNew = executions.length > lastExecutionCount;
     lastExecutionCount = executions.length;
 
-    tbody.innerHTML = executions.map((exec, idx) => `
-      <tr class="${isNew && idx === 0 ? 'flash-new' : ''}">
-        <td><span class="incident-id">${escapeHtml(exec.incident_id)}</span></td>
-        <td><span class="action-name">${escapeHtml(exec.action)}</span></td>
-        <td><span class="status-badge status-${exec.execution_status}">${escapeHtml(exec.execution_status)}</span></td>
-        <td><span class="mode-badge">${escapeHtml(exec.mode || 'subprocess')}</span></td>
-        <td><span class="duration">${(exec.duration_ms || 0).toFixed(1)}ms</span></td>
-        <td><span class="output-cell" title="${escapeHtml(exec.output)}">${escapeHtml(exec.output)}</span></td>
-        <td><span class="timestamp">${formatTime(exec.executed_at)}</span></td>
-      </tr>
-    `).join('');
+    container.innerHTML = executions.map((exec, idx) => {
+      const actionDetails = exec.details && typeof exec.details === 'object' ? exec.details : {};
+      const detailObject = exec.detail && typeof exec.detail === 'object' ? exec.detail : null;
+      const sourceIncident = detailObject && typeof detailObject.source_incident === 'object'
+        ? detailObject.source_incident
+        : null;
+      const eventDetails = actionDetails.event_details && typeof actionDetails.event_details === 'object'
+        ? actionDetails.event_details
+        : {};
+
+      const ruleTag = Array.isArray(sourceIncident && sourceIncident.tags)
+        ? sourceIncident.tags.find(tag => typeof tag === 'string' && tag.startsWith('rule:'))
+        : null;
+      const ruleProblem = ruleTag ? ruleTag.split(':').slice(1).join(':') : '';
+
+      const detailRows = Object.entries(actionDetails)
+        .slice(0, 3)
+        .map(([key, value]) => `
+          <div class="detail-row">
+            <span>${escapeHtml(key)}</span>
+            <strong>${escapeHtml(valuePreview(value))}</strong>
+          </div>
+        `)
+        .join('');
+
+      const serviceName = exec.service_name
+        || (sourceIncident && (sourceIncident.affected_service || sourceIncident.service))
+        || eventDetails.service
+        || '-';
+
+      const problem = exec.problem
+        || exec.signal_type
+        || actionDetails.signal_type
+        || actionDetails.error
+        || actionDetails.type
+        || ruleProblem
+        || '-';
+
+      let incidentDetailSource = exec.detail;
+      if (!incidentDetailSource && Object.keys(eventDetails).length > 0) {
+        incidentDetailSource = eventDetails;
+      }
+      if (!incidentDetailSource && sourceIncident && sourceIncident.description) {
+        incidentDetailSource = sourceIncident.description;
+      }
+      const incidentDetail = incidentDetailSource ? valuePreview(incidentDetailSource) : '';
+
+      return `
+        <article class="execution-card ${isNew && idx === 0 ? 'flash-new' : ''}">
+          <div class="execution-top">
+            <span class="incident-id">${escapeHtml(exec.incident_id)}</span>
+            <span class="status-badge status-${exec.execution_status}">${escapeHtml(exec.execution_status)}</span>
+          </div>
+
+          <div class="execution-main">
+            <div class="action-name">${escapeHtml(exec.action)}</div>
+            <div class="execution-output"><strong>Solution:</strong> ${escapeHtml(exec.output || 'No output')}</div>
+          </div>
+
+          <div class="execution-meta">
+            <div class="meta-item"><strong>Service</strong>${escapeHtml(serviceName)}</div>
+            <div class="meta-item"><strong>Problem</strong>${escapeHtml(problem)}</div>
+            <div class="meta-item"><strong>Mode</strong>${escapeHtml(exec.mode || 'subprocess')}</div>
+            <div class="meta-item"><strong>Duration</strong>${(exec.duration_ms || 0).toFixed(1)}ms</div>
+            <div class="meta-item"><strong>Executed</strong>${formatTime(exec.executed_at)}</div>
+            <div class="meta-item"><strong>Retries</strong>${escapeHtml(exec.retries ?? 0)}</div>
+          </div>
+
+          ${incidentDetail ? `<div class="execution-output"><strong>Detail:</strong> ${escapeHtml(incidentDetail)}</div>` : ''}
+
+          ${detailRows ? `<div class="execution-details">${detailRows}</div>` : ''}
+        </article>
+      `;
+    }).join('');
   }
 
   async function refreshData() {
@@ -586,7 +690,7 @@ DASHBOARD_HTML = r"""
       // Update UI
       updateMetrics(data.metrics || {});
       updateActions(data.registered_actions || []);
-      updateTable(data.executions || []);
+      updateExecutionCards(data.executions || []);
 
     } catch (err) {
       console.error('Failed to refresh data:', err);

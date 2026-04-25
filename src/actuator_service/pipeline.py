@@ -34,10 +34,16 @@ class ExecutionHistory:
             "timeout_count": 0
         }
 
-    def add(self, result: ExecutionResult):
+    def add(self, result: ExecutionResult, extra: Optional[Dict[str, Any]] = None):
         """Add an execution result to history."""
         with self._lock:
-            self._history.appendleft(result.to_dict())
+            record = result.to_dict()
+            if isinstance(extra, dict):
+                for key, value in extra.items():
+                    if value is not None:
+                        record[key] = value
+
+            self._history.appendleft(record)
             self._counters["total_executions"] += 1
 
             status = result.execution_status.value
@@ -103,6 +109,12 @@ class ActuatorPipeline:
             **event
         }
 
+        context = {
+            "service_name": event.get("service") or event.get("service_name"),
+            "problem": event.get("signal_type") or event.get("error") or event.get("type"),
+            "detail": event.get("details"),
+        }
+
         if not action:
             logger.warning(f"No action specified in event: {event}")
             result = ExecutionResult(
@@ -111,7 +123,14 @@ class ActuatorPipeline:
                 execution_status="failed",
                 output="No action specified in event"
             )
-            self.history.add(result)
+            self.history.add(result, extra=context)
+            publish_event({
+                **result.to_dict(),
+                "solution": result.output,
+                "signal_type": event.get("signal_type") or event.get("error") or event.get("type"),
+                "event_details": event.get("details", {}),
+                "source_event": event,
+            })
             return result
 
         logger.info(f"Processing event: action={action}, incident={incident_id}")
@@ -120,10 +139,16 @@ class ActuatorPipeline:
         result = await self.executor.execute_action(action, incident, parameters)
 
         # Store in history
-        self.history.add(result)
+        self.history.add(result, extra=context)
 
-        # Publish to Redis stream
-        publish_event(result.to_dict())
+        # Publish to Redis stream with event context for downstream UIs.
+        publish_event({
+            **result.to_dict(),
+            "solution": result.output,
+            "signal_type": event.get("signal_type") or event.get("error") or event.get("type"),
+            "event_details": event.get("details", {}),
+            "source_event": event,
+        })
 
         logger.info(
             f"Execution complete: action={action}, status={result.execution_status.value}, "
@@ -136,7 +161,8 @@ class ActuatorPipeline:
         self,
         action: str,
         incident_id: str,
-        parameters: Optional[Dict[str, Any]] = None
+        parameters: Optional[Dict[str, Any]] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ExecutionResult:
         """
         Execute an action directly (for API calls).
@@ -153,8 +179,14 @@ class ActuatorPipeline:
         result = await self.executor.execute_action(action, incident, parameters)
 
         # Store and publish
-        self.history.add(result)
-        publish_event(result.to_dict())
+        self.history.add(result, extra=context)
+        publish_event({
+            **result.to_dict(),
+            "solution": result.output,
+            "service_name": context.get("service_name") if isinstance(context, dict) else None,
+            "problem": context.get("problem") if isinstance(context, dict) else None,
+            "detail": context.get("detail") if isinstance(context, dict) else None,
+        })
 
         return result
 

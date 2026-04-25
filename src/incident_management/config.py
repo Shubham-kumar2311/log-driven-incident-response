@@ -52,7 +52,8 @@ CRITICAL_SERVICES = [
 ]
 
 # ── Forwarding (to response service) ────────────────────────────────
-FORWARD_URL = os.getenv("FORWARD_URL", "")
+FORWARD_URL = os.getenv("FORWARD_URL", "").strip()
+FORWARD_TIMEOUT_SECONDS = float(os.getenv("FORWARD_TIMEOUT_SECONDS", "20"))
 
 # ── Logging ─────────────────────────────────────────────────────────
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

@@ -46,6 +46,9 @@ class ExecuteRequest(BaseModel):
         default=None,
         description="Optional parameters for the action"
     )
+    service_name: Optional[str] = Field(default=None, description="Affected service name")
+    problem: Optional[str] = Field(default=None, description="Problem or signal type")
+    detail: Optional[Any] = Field(default=None, description="Additional context details")
 
 
 class ExecuteResponse(BaseModel):
@@ -152,7 +155,12 @@ async def execute_action(request: ExecuteRequest):
     result = await pipeline.execute_direct(
         action=request.action,
         incident_id=request.incident_id,
-        parameters=request.parameters
+        parameters=request.parameters,
+        context={
+            "service_name": request.service_name,
+            "problem": request.problem,
+            "detail": request.detail,
+        },
     )
 
     return ExecuteResponse(**result.to_dict())
@@ -169,7 +177,12 @@ async def execute_batch(request: BatchExecuteRequest):
         pipeline.execute_direct(
             action=action.action,
             incident_id=action.incident_id,
-            parameters=action.parameters
+            parameters=action.parameters,
+            context={
+                "service_name": action.service_name,
+                "problem": action.problem,
+                "detail": action.detail,
+            },
         )
         for action in request.actions
     ]

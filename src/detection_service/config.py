@@ -44,7 +44,8 @@ ANOMALY_Z_THRESHOLD = float(os.getenv("ANOMALY_Z_THRESHOLD", 2.5))
 ANOMALY_MIN_SAMPLES = int(os.getenv("ANOMALY_MIN_SAMPLES", 10))
 
 # ── Forwarding (API mode) ──────────────────────────────────────────
-FORWARD_URL = os.getenv("FORWARD_URL", "")
+FORWARD_URL = os.getenv("FORWARD_URL", "").strip()
+FORWARD_TIMEOUT_SECONDS = float(os.getenv("FORWARD_TIMEOUT_SECONDS", "20"))
 
 # ── MongoDB (Detection results + feedback) ─────────────────────────
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")

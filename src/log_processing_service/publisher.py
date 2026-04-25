@@ -7,6 +7,7 @@ import requests
 from config import (
     USE_REDIS, REDIS_HOST, REDIS_PORT,
     OUTPUT_STREAM, MAX_QUEUE_SIZE, DETECT_API,
+    DETECT_API_TIMEOUT_SECONDS,
 )
 
 logger = logging.getLogger("processing.publisher")
@@ -41,8 +42,9 @@ def _publish_http(event: dict) -> bool:
     """Forward processed event to detection service via HTTP."""
     if DETECT_API:
         try:
-            resp = requests.post(DETECT_API, json=event, timeout=5)
+            resp = requests.post(DETECT_API, json=event, timeout=DETECT_API_TIMEOUT_SECONDS)
             resp.raise_for_status()
+            logger.debug("Forwarded event to detection service")
             return True
         except requests.RequestException as e:
             logger.error("HTTP forward to detection service failed: %s", e)

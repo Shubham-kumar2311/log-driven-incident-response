@@ -42,6 +42,7 @@ function App() {
   const [testSignal, setTestSignal] = useState('')
   const [testResult, setTestResult] = useState(null)
   const [testing, setTesting] = useState(false)
+  const [solutionCards, setSolutionCards] = useState([])
 
   // Fetch playbooks
   const fetchPlaybooks = useCallback(async () => {
@@ -68,11 +69,24 @@ function App() {
     }
   }, [])
 
+  // Fetch actuator solution cards
+  const fetchSolutions = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/actuator/solutions?limit=12`)
+      if (!res.ok) throw new Error('Failed to fetch actuator solutions')
+      const data = await res.json()
+      setSolutionCards(data.items || [])
+    } catch {
+      // Keep dashboard usable even if actuator stream is unavailable.
+      setSolutionCards([])
+    }
+  }, [])
+
   // Initial load and auto-refresh
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      await Promise.all([fetchPlaybooks(), fetchHealth()])
+      await Promise.all([fetchPlaybooks(), fetchHealth(), fetchSolutions()])
       setLoading(false)
     }
     load()
@@ -81,10 +95,11 @@ function App() {
     const interval = setInterval(() => {
       fetchPlaybooks()
       fetchHealth()
+      fetchSolutions()
     }, 10000)
 
     return () => clearInterval(interval)
-  }, [fetchPlaybooks, fetchHealth])
+  }, [fetchPlaybooks, fetchHealth, fetchSolutions])
 
   // Clear messages after 3 seconds
   useEffect(() => {
@@ -332,6 +347,48 @@ function App() {
                   <div style={{ fontSize: '0.85rem', color: '#666' }}>Enabled</div>
                 </div>
               </div>
+            </div>
+
+            <div className="card">
+              <h2>Actuator Solutions</h2>
+
+              {solutionCards.length === 0 ? (
+                <div className="solution-empty">No actuator solutions available yet.</div>
+              ) : (
+                <div className="solution-cards">
+                  {solutionCards.map((card) => {
+                    const timestamp = card.executed_at || card.published_at
+                    const readableTime = timestamp ? new Date(timestamp).toLocaleString() : 'Unknown time'
+                    const detailSource = card.detail ?? card.event_details
+                    const detailText = typeof detailSource === 'string'
+                      ? detailSource
+                      : (detailSource ? JSON.stringify(detailSource, null, 2) : '')
+
+                    return (
+                      <article className="solution-card" key={card.message_id || `${card.incident_id}-${card.action}-${timestamp}`}>
+                        <div className="solution-card-header">
+                          <strong>{card.incident_id || 'unknown incident'}</strong>
+                          <span className={`status-badge ${card.status === 'success' ? 'healthy' : 'error'}`}>
+                            {card.status || 'unknown'}
+                          </span>
+                        </div>
+
+                        <div className="solution-meta">
+                          <span><b>Service:</b> {card.service_name || 'unknown'}</span>
+                          <span><b>Problem:</b> {card.problem || card.signal_type || 'unknown'}</span>
+                          <span><b>Action:</b> {card.action || 'unknown'}</span>
+                          <span><b>Time:</b> {readableTime}</span>
+                        </div>
+
+                        <div className="solution-text"><b>Solution:</b> {card.solution || 'No solution output provided.'}</div>
+                        {detailText && detailText !== '{}' && (
+                          <div className="solution-detail"><b>Detail:</b> {detailText}</div>
+                        )}
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

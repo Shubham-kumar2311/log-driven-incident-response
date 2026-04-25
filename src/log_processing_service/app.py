@@ -44,6 +44,7 @@ app = FastAPI(title="Log Processing Service", lifespan=lifespan)
 async def process_event_endpoint(request: Request):
     """Accept a single raw event via HTTP (used when Redis is disabled)."""
     event = await request.json()
+    print("Received /process request", event)
     processed = pipeline.process(event)
 
     if processed:

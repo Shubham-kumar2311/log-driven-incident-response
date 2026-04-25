@@ -4,7 +4,7 @@ import logging
 import redis
 import requests
 
-from config import FORWARD_URL, OUTPUT_STREAM, REDIS_HOST, REDIS_PORT, USE_REDIS
+from config import FORWARD_TIMEOUT_SECONDS, FORWARD_URL, OUTPUT_STREAM, REDIS_HOST, REDIS_PORT, USE_REDIS
 
 logger = logging.getLogger("detection.publisher")
 
@@ -34,7 +34,7 @@ def publish_signal(signal: dict) -> None:
             logger.exception("Failed to publish signal to Redis")
     elif FORWARD_URL:
         try:
-            resp = requests.post(FORWARD_URL, json={"signals": [signal]}, timeout=5)
+            resp = requests.post(FORWARD_URL, json={"signals": [signal]}, timeout=FORWARD_TIMEOUT_SECONDS)
             resp.raise_for_status()
             logger.info(
                 "Signal forwarded via HTTP",

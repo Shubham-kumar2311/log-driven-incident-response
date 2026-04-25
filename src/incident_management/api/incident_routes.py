@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from incident_manager import IncidentManager
 from incident_store import IncidentStore
 from models.incident_model import VALID_STATUSES, STATUS_TRANSITIONS
+from publisher import publish_incident
 
 logger = logging.getLogger("incident.api")
 
@@ -55,6 +56,7 @@ def ingest_signals(payload: SignalsPayload):
     results = []
     for signal in payload.signals:
         incident = _manager.process_signal(signal)
+        publish_incident(incident)
         results.append(incident)
     return {"incidents": results, "count": len(results)}
 
