@@ -10,7 +10,7 @@ DASHBOARD_HTML = r"""
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Actuator Service - Monitoring Dashboard</title>
+  <title>Actuator Console</title>
   <style>
     * {
       margin: 0;
@@ -77,7 +77,7 @@ DASHBOARD_HTML = r"""
     .header-logo {
       width: 32px;
       height: 32px;
-      background: linear-gradient(135deg, var(--green), var(--accent));
+      background: var(--accent);
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -234,7 +234,7 @@ DASHBOARD_HTML = r"""
     .execution-card {
       border: 1px solid var(--border);
       border-radius: 10px;
-      background: linear-gradient(180deg, var(--surface2), var(--surface3));
+      background: var(--surface2);
       padding: 12px;
       display: grid;
       gap: 8px;
@@ -300,6 +300,43 @@ DASHBOARD_HTML = r"""
       border-top: 1px dashed var(--border);
       padding-top: 8px;
       margin-top: 4px;
+    }
+
+    .payload-block {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: rgba(13, 17, 23, 0.45);
+      margin-top: 2px;
+      overflow: hidden;
+    }
+
+    .payload-block summary {
+      cursor: pointer;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+      list-style: none;
+    }
+
+    .payload-block summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .payload-json {
+      margin: 0;
+      padding: 8px;
+      color: var(--text2);
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 180px;
+      overflow: auto;
+      font-family: Consolas, 'Courier New', monospace;
     }
 
     .detail-row {
@@ -450,7 +487,7 @@ DASHBOARD_HTML = r"""
 <div class="header">
   <div class="header-left">
     <div class="header-logo">A</div>
-    <h1>Actuator Service</h1>
+    <h1>Actuator Console</h1>
   </div>
   <div class="status">
     <div class="dot" id="status-dot"></div>
@@ -613,6 +650,13 @@ DASHBOARD_HTML = r"""
         `)
         .join('');
 
+      const actuatorPayload = exec.actuator_received_payload && typeof exec.actuator_received_payload === 'object'
+        ? exec.actuator_received_payload
+        : null;
+      const actuatorPayloadJson = actuatorPayload
+        ? escapeHtml(JSON.stringify(actuatorPayload, null, 2))
+        : '';
+
       const serviceName = exec.service_name
         || (sourceIncident && (sourceIncident.affected_service || sourceIncident.service))
         || eventDetails.service
@@ -657,6 +701,13 @@ DASHBOARD_HTML = r"""
           </div>
 
           ${incidentDetail ? `<div class="execution-output"><strong>Detail:</strong> ${escapeHtml(incidentDetail)}</div>` : ''}
+
+          ${actuatorPayload ? `
+            <details class="payload-block">
+              <summary>Actuator Received Payload</summary>
+              <pre class="payload-json">${actuatorPayloadJson}</pre>
+            </details>
+          ` : ''}
 
           ${detailRows ? `<div class="execution-details">${detailRows}</div>` : ''}
         </article>

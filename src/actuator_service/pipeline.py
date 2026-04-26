@@ -113,6 +113,7 @@ class ActuatorPipeline:
             "service_name": event.get("service") or event.get("service_name"),
             "problem": event.get("signal_type") or event.get("error") or event.get("type"),
             "detail": event.get("details"),
+            "actuator_received_payload": event,
         }
 
         if not action:

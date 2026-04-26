@@ -7,1240 +7,608 @@ def render_dashboard_html() -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pipeline Demo Control Room</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <title>Pipeline Demo</title>
   <style>
-    :root {
-      --bg-cream: #f5efe7;
-      --bg-sky: #dff3f4;
-      --panel: #ffffff;
-      --ink: #102a43;
-      --muted: #486581;
-      --brand: #0e7490;
-      --brand-strong: #155e75;
-      --accent: #ea580c;
-      --good: #15803d;
-      --bad: #b91c1c;
-      --ring: rgba(14, 116, 144, 0.25);
-      --shadow: 0 14px 40px rgba(16, 42, 67, 0.1);
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --radius-sm: 8px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: "Source Sans 3", "Segoe UI", sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 8% 10%, rgba(14, 116, 144, 0.2), transparent 42%),
-        radial-gradient(circle at 88% 12%, rgba(234, 88, 12, 0.17), transparent 36%),
-        linear-gradient(180deg, var(--bg-cream), var(--bg-sky));
-      min-height: 100vh;
-      padding: 28px;
-    }
-
-    .page {
-      max-width: 1220px;
-      margin: 0 auto;
-      display: grid;
-      gap: 18px;
-    }
-
-    .hero {
-      position: relative;
-      overflow: hidden;
-      border-radius: 24px;
-      background: linear-gradient(120deg, #0e7490 0%, #155e75 54%, #1f2937 100%);
-      color: #f8fafc;
-      padding: 26px;
-      box-shadow: var(--shadow);
-      animation: rise-in 500ms ease;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      top: -48px;
-      right: -36px;
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
-      pointer-events: none;
-    }
-
-    .hero h1 {
-      margin: 0 0 8px;
-      font: 800 2rem/1.12 "Sora", sans-serif;
-      letter-spacing: 0.01em;
-    }
-
-    .hero p {
-      margin: 0;
-      max-width: 760px;
-      color: rgba(241, 245, 249, 0.92);
-      font-size: 1.02rem;
-    }
-
-    .badge-row {
-      margin-top: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .badge {
-      font-size: 0.8rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      background: rgba(2, 6, 23, 0.22);
-    }
-
-    .banner {
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      border: 1px solid #bae6fd;
-      background: #f0f9ff;
-      color: #0c4a6e;
-      display: none;
-      animation: rise-in 300ms ease;
-    }
-
-    .banner.visible {
-      display: block;
-    }
-
-    .banner.warn {
-      border-color: #fde68a;
-      background: #fffbeb;
-      color: #92400e;
-    }
-
-    .banner.error {
-      border-color: #fecaca;
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .banner.success {
-      border-color: #bbf7d0;
-      background: #f0fdf4;
-      color: #166534;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 18px;
-    }
-
-    .panel {
-      background: var(--panel);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      animation: rise-in 500ms ease;
-    }
-
-    .panel h2 {
-      margin: 0 0 8px;
-      font: 700 1.25rem/1.2 "Sora", sans-serif;
-      color: #0f172a;
-    }
-
-    .panel p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .controls {
-      margin-top: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 999px;
-      background: var(--brand);
-      color: #fff;
-      cursor: pointer;
-      font: 700 0.82rem/1 "Sora", sans-serif;
-      letter-spacing: 0.02em;
-      padding: 10px 14px;
-      transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      background: var(--brand-strong);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn.secondary {
-      background: #334155;
-    }
-
-    .btn.secondary:hover {
-      background: #0f172a;
-    }
-
-    .btn.ghost {
-      border: 1px solid #cbd5e1;
-      color: #334155;
-      background: #f8fafc;
-    }
-
-    .btn.ghost:hover {
-      background: #f1f5f9;
-    }
-
-    .health-grid {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .health-item {
-      border-radius: var(--radius-md);
-      border: 1px solid #cbd5e1;
-      background: #f8fafc;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-      opacity: 0;
-      transform: translateY(8px);
-      animation: stagger-in 250ms ease forwards;
-    }
-
-    .health-item.up {
-      border-color: #86efac;
-      background: #f0fdf4;
-    }
-
-    .health-item.down {
-      border-color: #fecaca;
-      background: #fef2f2;
-    }
-
-    .health-pill {
-      font: 700 0.73rem/1 "Sora", sans-serif;
-      padding: 4px 8px;
-      border-radius: 999px;
-      color: #fff;
-    }
-
-    .health-pill.up {
-      background: var(--good);
-    }
-
-    .health-pill.down {
-      background: var(--bad);
-    }
-
-    .log-grid {
-      margin-top: 14px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .log-card {
-      border: 1px solid #dbeafe;
-      border-radius: var(--radius-md);
-      background: linear-gradient(180deg, #ffffff, #f8fafc);
-      padding: 12px;
-      display: grid;
-      gap: 8px;
-      opacity: 0;
-      transform: translateY(10px);
-      animation: stagger-in 280ms ease forwards;
-    }
-
-    .log-card h3 {
-      margin: 0;
-      font: 700 1rem/1.2 "Sora", sans-serif;
-      color: #0f172a;
-    }
-
-    .log-card p {
-      margin: 0;
-      color: #334155;
-      font-size: 0.92rem;
-    }
-
-    .small-code {
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
-      border-radius: var(--radius-sm);
-      font: 600 0.72rem/1.5 "Consolas", "Courier New", monospace;
-      padding: 8px;
-      color: #1e293b;
-      white-space: pre-wrap;
-      max-height: 108px;
-      overflow: auto;
-    }
-
-    .form-grid {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .field {
-      display: grid;
-      gap: 5px;
-    }
-
-    .field.span-2 {
-      grid-column: span 2;
-    }
-
-    .field label {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #334155;
-      letter-spacing: 0.01em;
-    }
-
-    .field input,
-    .field select,
-    .field textarea {
-      border-radius: var(--radius-sm);
-      border: 1px solid #cbd5e1;
-      padding: 9px 10px;
-      font: 500 0.9rem/1.3 "Source Sans 3", sans-serif;
-      color: #0f172a;
-      outline: none;
-      transition: border-color 120ms ease, box-shadow 120ms ease;
-      width: 100%;
-      background: #fff;
-    }
-
-    .field textarea {
-      min-height: 88px;
-      resize: vertical;
-    }
-
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: var(--brand);
-      box-shadow: 0 0 0 3px var(--ring);
-    }
-
-    .run-summary {
-      margin-top: 12px;
-      border: 1px solid #fde68a;
-      background: #fffbeb;
-      border-radius: var(--radius-md);
-      padding: 10px;
-      color: #92400e;
-      font-size: 0.92rem;
-      display: none;
-    }
-
-    .run-summary.visible {
-      display: block;
-    }
-
-    .event-card {
-      margin-top: 10px;
-      border: 1px solid #dbeafe;
-      background: #f8fbff;
-      border-radius: var(--radius-md);
-      padding: 12px;
-      display: none;
-      gap: 8px;
-    }
-
-    .event-card.visible {
-      display: grid;
-    }
-
-    .event-card h3 {
-      margin: 0;
-      font: 700 0.98rem/1.2 "Sora", sans-serif;
-      color: #0f172a;
-    }
-
-    .event-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      font-size: 0.86rem;
-      color: #1e293b;
-    }
-
-    .event-row {
-      border: 1px solid #dbeafe;
-      border-radius: var(--radius-sm);
-      background: #ffffff;
-      padding: 8px;
-    }
-
-    .event-row strong {
-      color: #1d4ed8;
-    }
-
-    .steps {
-      margin-top: 12px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .step-item {
-      border-radius: var(--radius-sm);
-      border: 1px solid #cbd5e1;
-      background: #f8fafc;
-      padding: 9px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.87rem;
-      opacity: 0;
-      transform: translateY(10px);
-      animation: stagger-in 250ms ease forwards;
-    }
-
-    .step-item.ok {
-      border-color: #86efac;
-      background: #f0fdf4;
-      color: #166534;
-    }
-
-    .step-item.fail {
-      border-color: #fecaca;
-      background: #fef2f2;
-      color: #991b1b;
-    }
-
-    .json-box {
-      margin-top: 12px;
-      border-radius: var(--radius-md);
-      border: 1px solid #0f172a;
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 12px;
-      font: 500 0.74rem/1.45 "Consolas", "Courier New", monospace;
-      white-space: pre-wrap;
-      max-height: 380px;
-      overflow: auto;
-    }
-
-    .json-box.hidden {
-      display: none;
-    }
-
-    .json-box.compact {
-      max-height: 240px;
-      margin-top: 10px;
-    }
-
-    .json-box.invalid {
-      border-color: #7f1d1d;
-      background: #7f1d1d;
-      color: #fee2e2;
-    }
-
-    .empty {
-      margin-top: 10px;
-      border-radius: var(--radius-sm);
-      background: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      padding: 12px;
-      color: #64748b;
-    }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.55);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 60;
-    }
-
-    .overlay.visible {
-      display: flex;
-      animation: fade-in 180ms ease;
-    }
-
-    .popup {
-      width: min(540px, 100%);
-      border-radius: 20px;
-      background: #fff;
-      box-shadow: var(--shadow);
-      border-top: 10px solid var(--brand);
-      padding: 20px;
-    }
-
-    .popup h3 {
-      margin: 0;
-      font: 700 1.25rem/1.2 "Sora", sans-serif;
-      color: #0f172a;
-    }
-
-    .popup p {
-      margin: 10px 0 0;
-      color: #334155;
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-
-    .popup-actions {
-      margin-top: 16px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    @keyframes rise-in {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes stagger-in {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fade-in {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    @media (max-width: 960px) {
-      body {
-        padding: 16px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 680px) {
-      .hero h1 {
-        font-size: 1.65rem;
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .field.span-2 {
-        grid-column: span 1;
-      }
-
-      .health-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .event-grid {
-        grid-template-columns: 1fr;
-      }
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2333;--surface3:#21293a;
+      --border:#30363d;--border-light:#3d444d;
+      --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+      --accent:#58a6ff;--accent-dim:rgba(88,166,255,.15);
+      --green:#3fb950;--green-dim:rgba(63,185,80,.15);
+      --yellow:#d29922;--yellow-dim:rgba(210,153,34,.15);
+      --red:#f85149;--red-dim:rgba(248,81,73,.15);
+      --orange:#db6d28;--orange-dim:rgba(219,109,40,.15);
+      --purple:#bc8cff;--purple-dim:rgba(188,140,255,.15);
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
+    a{color:var(--accent);text-decoration:none}
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
+
+    /* ── Header ── */
+    .header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .header-left{display:flex;align-items:center;gap:12px}
+    .header-logo{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff}
+    .header h1{font-size:15px;font-weight:600}
+    .header .status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+    .header .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,185,80,.4)}50%{opacity:.8;box-shadow:0 0 0 6px rgba(63,185,80,0)}}
+
+    /* ── Layout ── */
+    .container{display:flex;height:calc(100vh - 49px)}
+    .sidebar{width:360px;min-width:300px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface)}
+    .main{flex:1;overflow-y:auto;padding:24px 28px}
+
+    /* ── Sidebar sections ── */
+    .sb-section{border-bottom:1px solid var(--border);padding:14px}
+    .sb-section h2{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+    /* ── Prebuilt event list ── */
+    .prebuilt-list{display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 240px);overflow-y:auto}
+    .prebuilt-item{padding:10px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;border-left:3px solid transparent;background:var(--surface2)}
+    .prebuilt-item:hover{background:var(--surface3);border-color:var(--border-light)}
+    .prebuilt-item.active{background:var(--surface3);border-left-color:var(--accent)}
+    .prebuilt-item .pi-label{font-size:13px;font-weight:600;color:var(--text)}
+    .prebuilt-item .pi-desc{font-size:11px;color:var(--text2);margin-top:2px}
+    .prebuilt-item .pi-type{font-size:10px;color:var(--accent);font-family:monospace;margin-top:4px}
+
+    /* ── Banner ── */
+    .banner{padding:10px 16px;font-size:13px;display:none;border-bottom:1px solid var(--border)}
+    .banner.visible{display:block}
+    .banner.info{background:var(--accent-dim);color:var(--accent);border-color:rgba(88,166,255,.3)}
+    .banner.warn{background:var(--yellow-dim);color:var(--yellow);border-color:rgba(210,153,34,.3)}
+    .banner.error{background:var(--red-dim);color:var(--red);border-color:rgba(248,81,73,.3)}
+    .banner.success{background:var(--green-dim);color:var(--green);border-color:rgba(63,185,80,.3)}
+
+    /* ── Panels / cards ── */
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:16px;animation:fadeIn .25s ease}
+    .panel h2{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+    .panel p.hint{font-size:12px;color:var(--text3);margin-bottom:10px}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── Buttons ── */
+    .btn{padding:7px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer;transition:all .2s;font-weight:500}
+    .btn:hover{background:var(--surface3);border-color:var(--border-light)}
+    .btn:active{transform:scale(.97)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-primary{background:rgba(88,166,255,.15);border-color:rgba(88,166,255,.4);color:var(--accent)}
+    .btn-primary:hover{background:rgba(88,166,255,.25);border-color:var(--accent)}
+    .btn-success{background:rgba(63,185,80,.15);border-color:rgba(63,185,80,.4);color:var(--green)}
+    .btn-success:hover{background:rgba(63,185,80,.25);border-color:var(--green)}
+    .btn-danger{background:var(--red-dim);border-color:rgba(248,81,73,.4);color:var(--red)}
+
+    /* ── Form fields ── */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:grid;gap:4px}
+    .field.span-2{grid-column:span 2}
+    .field label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+    .field input,.field select,.field textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:inherit;transition:border-color .2s;width:100%}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none}
+    .field textarea{min-height:60px;resize:vertical;font-family:'Consolas','Courier New',monospace}
+
+    /* ── JSON editor ── */
+    .json-editor{position:relative}
+    .json-editor textarea{background:var(--bg);border:1px solid var(--border);color:#e2e8f0;padding:12px;border-radius:6px;font:12px/1.5 'Consolas','Courier New',monospace;width:100%;min-height:180px;resize:vertical;tab-size:2}
+    .json-editor textarea:focus{border-color:var(--accent);outline:none}
+    .json-editor textarea.invalid{border-color:var(--red)}
+    .json-editor .je-toolbar{display:flex;gap:6px;margin-top:6px;align-items:center}
+    .json-editor .je-status{font-size:11px;color:var(--text3);margin-left:auto}
+    .json-editor .je-status.ok{color:var(--green)}
+    .json-editor .je-status.err{color:var(--red)}
+
+    /* ── Run summary ── */
+    .run-summary{padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);font-size:12px;color:var(--text2);display:none;margin-bottom:12px}
+    .run-summary.visible{display:block}
+
+    /* ── Event detail card ── */
+    .event-card{border:1px solid var(--border);border-radius:6px;background:var(--surface2);padding:14px;display:none;gap:8px;margin-bottom:12px}
+    .event-card.visible{display:grid}
+    .event-card h3{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px}
+    .event-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .event-row{border:1px solid var(--border);border-radius:4px;background:var(--surface3);padding:6px 8px;font-size:12px;color:var(--text2)}
+    .event-row strong{color:var(--accent)}
+
+    /* ── Steps ── */
+    .steps{display:grid;gap:6px;margin-bottom:12px}
+    .step-item{border-radius:4px;border:1px solid var(--border);background:var(--surface2);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+    .step-item.ok{border-color:rgba(63,185,80,.3);color:var(--green)}
+    .step-item.fail{border-color:rgba(248,81,73,.3);color:var(--red)}
+
+    /* ── Raw JSON box ── */
+    .json-box{border-radius:6px;border:1px solid var(--border);background:var(--bg);color:#e2e8f0;padding:12px;font:12px/1.5 'Consolas','Courier New',monospace;white-space:pre-wrap;max-height:360px;overflow:auto;margin-bottom:12px}
+    .json-box.hidden{display:none}
+
+    /* ── Controls row ── */
+    .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+
+    /* ── Responsive ── */
+    @media(max-width:860px){
+      .container{flex-direction:column}
+      .sidebar{width:100%;min-width:0;max-height:260px;overflow-y:auto;border-right:none;border-bottom:1px solid var(--border)}
+      .form-grid{grid-template-columns:1fr}
+      .field.span-2{grid-column:span 1}
+      .event-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <h1>Pipeline Demo Control Room</h1>
-      <p>Trigger the processing hop from this standalone microservice and let the downstream chain continue service-to-service: detection to incident to response to actuator.</p>
-      <div class="badge-row">
-        <span class="badge">Standalone microservice</span>
-        <span class="badge">Prebuilt logs ready</span>
-        <span class="badge">Live downstream health</span>
-      </div>
-    </section>
 
-    <div id="banner" class="banner" role="status" aria-live="polite"></div>
+<!-- ── Header ── -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">P</div>
+    <h1>Pipeline Demo Console</h1>
+  </div>
+  <div class="status">
+    <span class="dot"></span>
+    <span id="statusText">Loading...</span>
+  </div>
+</div>
 
-    <section class="grid">
-      <article class="panel">
-        <h2>Prebuilt Incident Logs</h2>
-        <p>Each prebuilt log is crafted to exercise a specific response path.</p>
-        <div class="controls">
-          <button id="refreshPrebuilt" class="btn ghost" type="button">Refresh Logs</button>
-        </div>
-        <div id="prebuiltGrid" class="log-grid"></div>
-      </article>
+<!-- ── Banner ── -->
+<div id="banner" class="banner" role="status" aria-live="polite"></div>
 
-      <article class="panel">
-        <h2>Pipeline Health</h2>
-        <p>Checks downstream service readiness before and after every run.</p>
-        <div class="controls">
-          <button id="checkHealth" class="btn secondary" type="button">Check Health</button>
-        </div>
-        <div id="healthGrid" class="health-grid"></div>
-      </article>
-    </section>
+<!-- ── Main layout ── -->
+<div class="container">
 
-    <section class="grid">
-      <article class="panel">
-        <h2>Custom Event Runner</h2>
-        <p>Send a custom payload to /demo/pipeline-run when you need full control.</p>
-        <form id="customEventForm" class="form-grid">
-          <div class="field">
-            <label for="event_type">Event Type</label>
-            <input id="event_type" name="event_type" value="deployment.failed" required />
-          </div>
-          <div class="field">
-            <label for="service_name">Service Name</label>
-            <input id="service_name" name="service_name" value="deployment-service" required />
-          </div>
-          <div class="field span-2">
-            <label for="message">Message</label>
-            <input id="message" name="message" value="Custom pipeline demo event" required />
-          </div>
-          <div class="field">
-            <label for="log_level">Log Level</label>
-            <select id="log_level" name="log_level">
-              <option value="ERROR" selected>ERROR</option>
-              <option value="WARNING">WARNING</option>
-              <option value="INFO">INFO</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="environment">Environment</label>
-            <input id="environment" name="environment" value="production" required />
-          </div>
-          <div class="field">
-            <label for="status_code">Status Code</label>
-            <input id="status_code" name="status_code" type="number" min="100" max="599" value="500" required />
-          </div>
-          <div class="field">
-            <label for="latency_ms">Latency (ms)</label>
-            <input id="latency_ms" name="latency_ms" type="number" min="1" value="1200" required />
-          </div>
-          <div class="field span-2">
-            <label for="metadata_json">Metadata JSON Object</label>
-            <textarea id="metadata_json" name="metadata_json" spellcheck="false">{"reason":"manual demo trigger"}</textarea>
-          </div>
-          <div class="field span-2">
-            <button id="runCustom" class="btn" type="submit">Run Custom Event</button>
-          </div>
-        </form>
-        <div class="controls">
-          <button id="copyPayload" class="btn ghost" type="button">Copy Payload JSON</button>
-        </div>
-        <pre id="payloadPreview" class="json-box compact">Payload preview will appear here.</pre>
-      </article>
-
-      <article class="panel">
-        <h2>Execution Output</h2>
-        <p>Track processing acceptance and inspect full payload details from the trigger call.</p>
-        <div id="runSummary" class="run-summary"></div>
-        <section id="eventCard" class="event-card">
-          <h3>Event and Response Details</h3>
-          <div id="eventGrid" class="event-grid"></div>
-        </section>
-        <div id="steps" class="steps"></div>
-        <pre id="jsonBox" class="json-box hidden">Run a prebuilt log or custom event to view pipeline output.</pre>
-        <div class="controls">
-          <button id="toggleRawJson" class="btn ghost" type="button">Show Raw JSON</button>
-          <button id="showPopupAgain" class="btn ghost" type="button" disabled>Show Completion Popup Again</button>
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <div id="popupOverlay" class="overlay" aria-hidden="true">
-    <section class="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
-      <h3 id="popupTitle">Pipeline Run Finished</h3>
-      <p id="popupBody"></p>
-      <div class="popup-actions">
-        <button id="copyResult" class="btn ghost" type="button">Copy Summary</button>
-        <button id="closePopup" class="btn" type="button">Close</button>
-      </div>
-    </section>
+  <!-- ── Sidebar: prebuilt event switcher ── -->
+  <div class="sidebar">
+    <div class="sb-section">
+      <h2>Prebuilt Events</h2>
+      <div id="prebuiltList" class="prebuilt-list"></div>
+    </div>
   </div>
 
-  <script>
-    const API = {
-      prebuilt: "/demo/prebuilt-logs",
-      health: "/demo/pipeline-health",
-      run: "/demo/pipeline-run"
+  <!-- ── Main content ── -->
+  <div class="main">
+
+    <!-- Custom Event Runner -->
+    <div class="panel">
+      <h2>Custom Event Runner</h2>
+      <p class="hint">Edit fields or directly modify the JSON payload below. Changes sync both ways.</p>
+
+      <form id="customEventForm" class="form-grid">
+        <div class="field">
+          <label for="event_type">Event Type</label>
+          <input id="event_type" name="event_type" value="deployment.failed" required />
+        </div>
+        <div class="field">
+          <label for="service_name">Service Name</label>
+          <input id="service_name" name="service_name" value="deployment-service" required />
+        </div>
+        <div class="field span-2">
+          <label for="message">Message</label>
+          <input id="message" name="message" value="Custom pipeline demo event" required />
+        </div>
+        <div class="field">
+          <label for="log_level">Log Level</label>
+          <select id="log_level" name="log_level">
+            <option value="ERROR" selected>ERROR</option>
+            <option value="WARNING">WARNING</option>
+            <option value="INFO">INFO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="environment">Environment</label>
+          <input id="environment" name="environment" value="production" required />
+        </div>
+        <div class="field">
+          <label for="status_code">Status Code</label>
+          <input id="status_code" name="status_code" type="number" min="100" max="599" value="500" required />
+        </div>
+        <div class="field">
+          <label for="latency_ms">Latency (ms)</label>
+          <input id="latency_ms" name="latency_ms" type="number" min="1" value="1200" required />
+        </div>
+        <div class="field span-2">
+          <label for="metadata_json">Metadata JSON</label>
+          <textarea id="metadata_json" name="metadata_json" spellcheck="false">{"reason":"manual demo trigger"}</textarea>
+        </div>
+      </form>
+
+      <!-- Live editable JSON preview -->
+      <div class="json-editor" style="margin-top:12px">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Payload JSON (editable)</label>
+        <textarea id="jsonEditorArea" spellcheck="false"></textarea>
+        <div class="je-toolbar">
+          <button id="copyPayload" class="btn" type="button">Copy JSON</button>
+          <button id="runCustom" class="btn btn-primary" type="button">Run Event</button>
+          <span id="jsonStatus" class="je-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Execution Output -->
+    <div class="panel">
+      <h2>Actuator Payload Received</h2>
+      <p class="hint">Only payload received by actuator is shown below.</p>
+      <div id="runSummary" class="run-summary"></div>
+      <section id="eventCard" class="event-card">
+        <h3>Actuator Execution Details</h3>
+        <div id="eventGrid" class="event-grid"></div>
+      </section>
+      <div id="steps" class="steps"></div>
+      <pre id="jsonBox" class="json-box hidden"></pre>
+      <div class="controls">
+        <button id="toggleRawJson" class="btn" type="button">Show Actuator Payload JSON</button>
+      </div>
+    </div>
+
+  </div><!-- /.main -->
+</div><!-- /.container -->
+
+<script>
+(function(){
+  "use strict";
+
+  const API = {
+    prebuilt: "/demo/prebuilt-logs",
+    health: "/demo/pipeline-health",
+    run: "/demo/pipeline-run"
+  };
+
+  const state = {
+    prebuiltLogs: [],
+    selectedPrebuiltIdx: -1,
+    lastResult: null,
+    running: false,
+    lastSource: "",
+    showRawJson: false,
+    jsonEditorDirty: false   // true when user edits JSON directly
+  };
+
+  /* ── Element refs ── */
+  const $ = id => document.getElementById(id);
+  const el = {
+    banner: $("banner"),
+    statusText: $("statusText"),
+    prebuiltList: $("prebuiltList"),
+    form: $("customEventForm"),
+    jsonEditor: $("jsonEditorArea"),
+    jsonStatus: $("jsonStatus"),
+    copyPayload: $("copyPayload"),
+    runCustom: $("runCustom"),
+    runSummary: $("runSummary"),
+    eventCard: $("eventCard"),
+    eventGrid: $("eventGrid"),
+    steps: $("steps"),
+    jsonBox: $("jsonBox"),
+    toggleRawJson: $("toggleRawJson"),
+  };
+
+  /* ── Helpers ── */
+  function esc(v){
+    const s = String(v==null?"":v);
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function setBanner(msg, variant){
+    if(!msg){el.banner.className="banner";el.banner.textContent="";return}
+    el.banner.className="banner visible "+(variant||"info");
+    el.banner.textContent=msg;
+  }
+
+  async function fetchJson(url, opts){
+    const r = await fetch(url, opts||{});
+    let body={};try{body=await r.json()}catch(e){}
+    if(!r.ok){
+      let m="Request failed";
+      if(body&&typeof body==="object"){
+        if(typeof body.detail==="string")m=body.detail;
+        else if(body.detail&&typeof body.detail.message==="string")m=body.detail.message;
+      }
+      const err=new Error(m+" ("+r.status+")");err.responsePayload=body;err.statusCode=r.status;throw err;
+    }
+    return body;
+  }
+
+  async function copyToClipboard(text){
+    if(navigator.clipboard&&window.isSecureContext){
+      try{await navigator.clipboard.writeText(text);return true}catch(e){}
+    }
+    const ta=document.createElement("textarea");
+    ta.value=text;ta.setAttribute("readonly","true");
+    ta.style.cssText="position:fixed;opacity:0;pointer-events:none;top:0;left:0";
+    document.body.appendChild(ta);ta.focus();ta.select();
+    const ok=document.execCommand("copy");
+    document.body.removeChild(ta);
+    if(!ok)throw new Error("Copy not supported");
+    return true;
+  }
+
+  async function copyOrPrompt(text){
+    try{await copyToClipboard(text);return true}catch(e){window.prompt("Copy manually:",text);return false}
+  }
+
+  function setRunning(v){
+    state.running=v;
+    el.runCustom.disabled=v;
+    el.copyPayload.disabled=v;
+    document.querySelectorAll("[data-run-idx]").forEach(b=>{b.disabled=v});
+  }
+
+  /* ── Form <-> JSON sync ── */
+  function formToPayload(){
+    const fd=new FormData(el.form);
+    const sc=Number(fd.get("status_code")||500);
+    const lm=Number(fd.get("latency_ms")||1200);
+    let meta={};
+    try{const p=JSON.parse(fd.get("metadata_json")||"{}");if(p&&typeof p==="object"&&!Array.isArray(p))meta=p;}catch(e){}
+    return {
+      event_type:String(fd.get("event_type")||"").trim(),
+      service_name:String(fd.get("service_name")||"").trim(),
+      message:String(fd.get("message")||"").trim(),
+      log_level:String(fd.get("log_level")||"ERROR").trim(),
+      environment:String(fd.get("environment")||"").trim(),
+      status_code:sc,
+      latency_ms:lm,
+      metadata:meta
     };
+  }
 
-    const state = {
-      prebuiltLogs: [],
-      healthSnapshot: null,
-      lastResult: null,
-      running: false,
-      lastSource: "",
-      showRawJson: false
-    };
+  function payloadToForm(p){
+    if(!p||typeof p!=="object")return;
+    const s=k=>el.form.elements[k];
+    if(p.event_type!=null&&s("event_type"))s("event_type").value=p.event_type;
+    if(p.service_name!=null&&s("service_name"))s("service_name").value=p.service_name;
+    if(p.message!=null&&s("message"))s("message").value=p.message;
+    if(p.log_level!=null&&s("log_level"))s("log_level").value=p.log_level;
+    if(p.environment!=null&&s("environment"))s("environment").value=p.environment;
+    if(p.status_code!=null&&s("status_code"))s("status_code").value=p.status_code;
+    if(p.latency_ms!=null&&s("latency_ms"))s("latency_ms").value=p.latency_ms;
+    if(p.metadata!=null&&s("metadata_json"))s("metadata_json").value=JSON.stringify(p.metadata,null,2);
+  }
 
-    const elements = {
-      banner: document.getElementById("banner"),
-      prebuiltGrid: document.getElementById("prebuiltGrid"),
-      refreshPrebuilt: document.getElementById("refreshPrebuilt"),
-      checkHealth: document.getElementById("checkHealth"),
-      healthGrid: document.getElementById("healthGrid"),
-      customEventForm: document.getElementById("customEventForm"),
-      runCustom: document.getElementById("runCustom"),
-      copyPayload: document.getElementById("copyPayload"),
-      payloadPreview: document.getElementById("payloadPreview"),
-      runSummary: document.getElementById("runSummary"),
-      eventCard: document.getElementById("eventCard"),
-      eventGrid: document.getElementById("eventGrid"),
-      steps: document.getElementById("steps"),
-      jsonBox: document.getElementById("jsonBox"),
-      toggleRawJson: document.getElementById("toggleRawJson"),
-      showPopupAgain: document.getElementById("showPopupAgain"),
-      popupOverlay: document.getElementById("popupOverlay"),
-      popupTitle: document.getElementById("popupTitle"),
-      popupBody: document.getElementById("popupBody"),
-      closePopup: document.getElementById("closePopup"),
-      copyResult: document.getElementById("copyResult")
-    };
+  function syncFormToEditor(){
+    if(state.jsonEditorDirty)return;
+    const p=formToPayload();
+    el.jsonEditor.value=JSON.stringify(p,null,2);
+    el.jsonEditor.classList.remove("invalid");
+    el.jsonStatus.textContent="Valid JSON";
+    el.jsonStatus.className="je-status ok";
+  }
 
-    function escapeHtml(value) {
-      const text = String(value === undefined || value === null ? "" : value);
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+  function syncEditorToForm(){
+    const raw=el.jsonEditor.value;
+    try{
+      const p=JSON.parse(raw);
+      if(!p||typeof p!=="object"||Array.isArray(p))throw new Error("Must be object");
+      el.jsonEditor.classList.remove("invalid");
+      el.jsonStatus.textContent="Valid JSON";
+      el.jsonStatus.className="je-status ok";
+      payloadToForm(p);
+      return p;
+    }catch(e){
+      el.jsonEditor.classList.add("invalid");
+      el.jsonStatus.textContent="Invalid: "+e.message;
+      el.jsonStatus.className="je-status err";
+      return null;
     }
+  }
 
-    function setBanner(message, variant) {
-      if (!message) {
-        elements.banner.className = "banner";
-        elements.banner.textContent = "";
-        return;
-      }
-      const className = variant ? "banner visible " + variant : "banner visible";
-      elements.banner.className = className;
-      elements.banner.textContent = message;
+  function getCurrentPayload(){
+    if(state.jsonEditorDirty){
+      return syncEditorToForm();
     }
+    return formToPayload();
+  }
 
-    async function fetchJson(url, options) {
-      const response = await fetch(url, options || {});
-      let payload = {};
-      try {
-        payload = await response.json();
-      } catch (error) {
-        payload = {};
-      }
-
-      if (!response.ok) {
-        let message = "Request failed";
-        if (payload && typeof payload === "object") {
-          if (typeof payload.detail === "string") {
-            message = payload.detail;
-          } else if (payload.detail && typeof payload.detail === "object" && typeof payload.detail.message === "string") {
-            message = payload.detail.message;
-          }
-        }
-        const requestError = new Error(message + " (" + response.status + ")");
-        requestError.responsePayload = payload;
-        requestError.statusCode = response.status;
-        throw requestError;
-      }
-
-      return payload;
+  /* ── Prebuilt events ── */
+  function renderPrebuiltList(){
+    if(!state.prebuiltLogs.length){
+      el.prebuiltList.innerHTML='<div style="padding:12px;color:var(--text3);font-size:12px">No prebuilt events found.</div>';
+      return;
     }
+    let html="";
+    state.prebuiltLogs.forEach((item,i)=>{
+      const active=i===state.selectedPrebuiltIdx?"active":"";
+      const evType=item.payload&&item.payload.event_type?item.payload.event_type:"";
+      html+='<div class="prebuilt-item '+active+'" data-run-idx="'+i+'">';
+      html+='<div class="pi-label">'+esc(item.label||item.id||"Event "+i)+'</div>';
+      html+='<div class="pi-desc">'+esc(item.description||"")+'</div>';
+      html+='<div class="pi-type">'+esc(evType)+'</div>';
+      html+='</div>';
+    });
+    el.prebuiltList.innerHTML=html;
 
-    async function copyText(text) {
-      if (navigator.clipboard && window.isSecureContext) {
-        try {
-          await navigator.clipboard.writeText(text);
-          return;
-        } catch (error) {
-          // Fall back to execCommand path below.
-        }
-      }
-
-      const helper = document.createElement("textarea");
-      helper.value = text;
-      helper.setAttribute("readonly", "true");
-      helper.style.position = "fixed";
-      helper.style.opacity = "0";
-      helper.style.pointerEvents = "none";
-      helper.style.top = "0";
-      helper.style.left = "0";
-
-      document.body.appendChild(helper);
-      helper.focus();
-      helper.select();
-
-      const copied = document.execCommand("copy");
-      document.body.removeChild(helper);
-
-      if (!copied) {
-        throw new Error("Clipboard copy is not supported in this context.");
-      }
-    }
-
-    async function copyTextOrPrompt(text) {
-      try {
-        await copyText(text);
-        return true;
-      } catch (error) {
-        window.prompt("Clipboard access is blocked. Copy manually:", text);
-        return false;
-      }
-    }
-
-    function setRunning(isRunning) {
-      state.running = isRunning;
-      elements.runCustom.disabled = isRunning;
-      elements.copyPayload.disabled = isRunning;
-      elements.checkHealth.disabled = isRunning;
-      elements.refreshPrebuilt.disabled = isRunning;
-
-      const runButtons = document.querySelectorAll("[data-run-prebuilt]");
-      runButtons.forEach((button) => {
-        button.disabled = isRunning;
+    document.querySelectorAll("[data-run-idx]").forEach(div=>{
+      div.addEventListener("click",()=>{
+        const idx=parseInt(div.getAttribute("data-run-idx"),10);
+        selectPrebuilt(idx);
       });
+    });
+  }
+
+  function selectPrebuilt(idx){
+    if(idx<0||idx>=state.prebuiltLogs.length)return;
+    state.selectedPrebuiltIdx=idx;
+    const item=state.prebuiltLogs[idx];
+    if(item&&item.payload){
+      payloadToForm(item.payload);
+      state.jsonEditorDirty=false;
+      syncFormToEditor();
     }
+    // highlight active
+    document.querySelectorAll("[data-run-idx]").forEach((d,i)=>{
+      d.classList.toggle("active",i===idx);
+    });
+  }
 
-    function renderHealth(snapshot) {
-      if (!snapshot || !Array.isArray(snapshot.services) || !snapshot.services.length) {
-        elements.healthGrid.innerHTML = '<div class="empty">No health snapshot yet.</div>';
-        return;
-      }
+  /* ── Render steps ── */
+  function renderSteps(steps){
+    if(!Array.isArray(steps)||!steps.length){el.steps.innerHTML="";return}
+    let h="";
+    steps.forEach(s=>{
+      const ok=Boolean(s&&s.ok);
+      h+='<div class="step-item '+(ok?"ok":"fail")+'"><strong>'+esc(s.step||"step")+'</strong><span>'+(ok?"OK":"ISSUE")+'</span></div>';
+    });
+    el.steps.innerHTML=h;
+  }
 
-      let html = "";
-      snapshot.services.forEach((service, index) => {
-        const isUp = Boolean(service && service.ok);
-        const itemClass = isUp ? "up" : "down";
-        const badgeClass = isUp ? "up" : "down";
-        const serviceName = service && service.service ? service.service : "unknown";
-        html += '<div class="health-item ' + itemClass + '" style="animation-delay:' + (index * 70) + 'ms">';
-        html += '<div>' + escapeHtml(serviceName) + '</div>';
-        html += '<span class="health-pill ' + badgeClass + '">' + (isUp ? "UP" : "DOWN") + '</span>';
-        html += '</div>';
-      });
-      elements.healthGrid.innerHTML = html;
+  function renderEventCard(result){
+    const actuatorExecution = result && result.actuator_execution && typeof result.actuator_execution === "object"
+      ? result.actuator_execution
+      : ((result && result.latest_actuator_execution && typeof result.latest_actuator_execution === "object")
+        ? result.latest_actuator_execution
+        : null);
+    const actuatorPayload = result && result.actuator_received_payload && typeof result.actuator_received_payload === "object"
+      ? result.actuator_received_payload
+      : ((actuatorExecution && actuatorExecution.actuator_received_payload && typeof actuatorExecution.actuator_received_payload === "object")
+        ? actuatorExecution.actuator_received_payload
+        : {});
+
+    const payloadDetails = actuatorPayload && actuatorPayload.details && typeof actuatorPayload.details === "object"
+      ? actuatorPayload.details
+      : {};
+
+    const steps=result&&Array.isArray(result.steps)?result.steps:[];
+    const ps=steps.find(s=>s&&s.step==="processing")||{};
+
+    const rows=[
+      {l:"Demo",v:(result&&result.demo_id)||"n/a"},
+      {l:"Processing",v:ps.summary||(ps.ok?"processed":"not processed")},
+      {l:"Actuator Signal",v:actuatorPayload.signal_type||actuatorPayload.type||"n/a"},
+      {l:"Actuator Service",v:actuatorPayload.service||actuatorPayload.service_name||"n/a"},
+      {l:"Actuator Problem",v:actuatorPayload.error||actuatorPayload.problem||"n/a"},
+      {l:"Payload Detail",v:Object.keys(payloadDetails).length?"available":"n/a"}
+    ];
+    if(actuatorExecution){
+      rows.push(
+        {l:"Actuator Action",v:actuatorExecution.action||"n/a"},
+        {l:"Actuator Status",v:actuatorExecution.execution_status||"n/a"},
+        {l:"Actuator Output",v:actuatorExecution.output||"n/a"},
+        {l:"Executed At",v:actuatorExecution.executed_at||"n/a"}
+      );
+    }else{
+      rows.push({l:"Actuator",v:"Waiting for downstream"});
     }
+    let h="";rows.forEach(r=>{h+='<div class="event-row"><strong>'+esc(r.l)+':</strong> '+esc(r.v)+'</div>'});
+    el.eventGrid.innerHTML=h;
+    el.eventCard.className="event-card visible";
+  }
 
-    function renderPrebuilt() {
-      if (!state.prebuiltLogs.length) {
-        elements.prebuiltGrid.innerHTML = '<div class="empty">No prebuilt logs found.</div>';
-        return;
-      }
+  function renderResult(result){
+    state.lastResult=result;
+    const status=result&&result.status?result.status:"unknown";
+    const demoId=result&&result.demo_id?result.demo_id:"n/a";
+    const reason=result&&result.reason?result.reason:"";
+    const message=result&&result.message?result.message:"";
+    const actuatorExecution=result&&result.actuator_execution&&typeof result.actuator_execution==="object"
+      ? result.actuator_execution
+      : ((result&&result.latest_actuator_execution&&typeof result.latest_actuator_execution==="object")
+        ? result.latest_actuator_execution
+        : null);
+    const action=actuatorExecution&&actuatorExecution.action?actuatorExecution.action:"pending";
+    const actuatorPayload=result&&result.actuator_received_payload&&typeof result.actuator_received_payload==="object"
+      ? result.actuator_received_payload
+      : {};
+    el.runSummary.className="run-summary visible";
+    el.runSummary.textContent="Demo "+demoId+" — status: "+status+". Actuator action: "+action+(message?". "+message:"")+(reason?". Reason: "+reason:"");
+    renderEventCard(result||{});
+    renderSteps(result&&result.steps?result.steps:[]);
+    el.jsonBox.textContent=JSON.stringify(actuatorPayload,null,2);
+    el.jsonBox.classList.toggle("hidden",!state.showRawJson);
+    el.toggleRawJson.textContent=state.showRawJson?"Hide Actuator Payload JSON":"Show Actuator Payload JSON";
+  }
 
-      let html = "";
-      state.prebuiltLogs.forEach((item, index) => {
-        const itemId = item && item.id ? item.id : "unknown";
-        const itemLabel = item && item.label ? item.label : itemId;
-        const itemDescription = item && item.description ? item.description : "Prebuilt payload";
-        const payloadPreview = JSON.stringify(item.payload || {}, null, 2);
-
-        html += '<article class="log-card" style="animation-delay:' + (index * 60) + 'ms">';
-        html += '<h3>' + escapeHtml(itemLabel) + '</h3>';
-        html += '<p>' + escapeHtml(itemDescription) + '</p>';
-        html += '<div class="small-code">' + escapeHtml(payloadPreview) + '</div>';
-        html += '<button class="btn" type="button" data-run-prebuilt="' + escapeHtml(itemId) + '">Run This Log</button>';
-        html += '</article>';
-      });
-
-      elements.prebuiltGrid.innerHTML = html;
-
-      const buttons = document.querySelectorAll("[data-run-prebuilt]");
-      buttons.forEach((button) => {
-        button.addEventListener("click", async () => {
-          const id = button.getAttribute("data-run-prebuilt");
-          const selected = state.prebuiltLogs.find((item) => item && item.id === id);
-          if (!selected || !selected.payload) {
-            setBanner("Selected prebuilt payload is unavailable.", "error");
-            return;
-          }
-          await runPipeline(selected.payload, selected.label || id);
+  /* ── Pipeline run ── */
+  async function runPipeline(payload, sourceLabel){
+    if(state.running)return;
+    setRunning(true);
+    setBanner("Running pipeline for "+sourceLabel+"...","warn");
+    try{
+      const result=await fetchJson(API.run,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      renderResult(result);
+      state.lastSource=sourceLabel;
+      const status=result&&result.status?result.status:"unknown";
+      setBanner("Pipeline run finished — "+status+".",status==="completed"?"success":"info");
+    }catch(error){
+      const detail=error&&error.responsePayload&&error.responsePayload.detail;
+      if(detail&&typeof detail==="object"){
+        renderResult({
+          demo_id:"n/a",
+          status:"failed",
+          reason:detail.message||error.message,
+          failed_step:detail.failed_step||"unknown",
+          actuator_execution:null,
+          actuator_received_payload:{},
+          steps:Array.isArray(detail.steps)?detail.steps:[],
+          response_attempts:Array.isArray(detail.response_attempts)?detail.response_attempts:[]
         });
-      });
+      }
+      setBanner(detail&&detail.message?detail.message:error.message,"error");
+    }finally{
+      setRunning(false);
     }
+  }
 
-    function renderSteps(steps) {
-      if (!Array.isArray(steps) || !steps.length) {
-        elements.steps.innerHTML = '<div class="empty">No pipeline steps recorded.</div>';
-        return;
-      }
+  /* ── Event wiring ── */
+  // Form inputs -> sync to JSON editor
+  el.form.querySelectorAll("input, select, textarea").forEach(inp=>{
+    inp.addEventListener("input",()=>{state.jsonEditorDirty=false;syncFormToEditor()});
+    inp.addEventListener("change",()=>{state.jsonEditorDirty=false;syncFormToEditor()});
+  });
 
-      let html = "";
-      steps.forEach((step, index) => {
-        const ok = Boolean(step && step.ok);
-        const className = ok ? "ok" : "fail";
-        const stepName = step && step.step ? step.step : "step";
-        const label = ok ? "OK" : "ISSUE";
-        html += '<div class="step-item ' + className + '" style="animation-delay:' + (index * 60) + 'ms">';
-        html += '<strong>' + escapeHtml(stepName) + '</strong>';
-        html += '<span>' + label + '</span>';
-        html += '</div>';
-      });
-      elements.steps.innerHTML = html;
+  // JSON editor direct edits
+  el.jsonEditor.addEventListener("input",()=>{
+    state.jsonEditorDirty=true;
+    syncEditorToForm();
+  });
+
+  // Run custom
+  el.runCustom.addEventListener("click",async()=>{
+    const p=getCurrentPayload();
+    if(!p){setBanner("Fix JSON errors first.","error");return}
+    await runPipeline(p,"custom payload");
+  });
+
+  // Prevent form submit default
+  el.form.addEventListener("submit",e=>{e.preventDefault();el.runCustom.click()});
+
+  // Copy payload
+  el.copyPayload.addEventListener("click",async()=>{
+    const p=getCurrentPayload();
+    if(!p){setBanner("JSON is invalid.","error");return}
+    const text=JSON.stringify(p,null,2);
+    const ok=await copyOrPrompt(text);
+    setBanner(ok?"JSON copied to clipboard.":"Clipboard blocked.","success");
+  });
+
+  // Raw JSON toggle
+  el.toggleRawJson.addEventListener("click",()=>{
+    state.showRawJson=!state.showRawJson;
+    el.jsonBox.classList.toggle("hidden",!state.showRawJson);
+    el.toggleRawJson.textContent=state.showRawJson?"Hide Actuator Payload JSON":"Show Actuator Payload JSON";
+  });
+
+  /* ── Init ── */
+  async function init(){
+    setBanner("Loading...","info");
+    el.statusText.textContent="Loading...";
+
+    try{
+      const data=await fetchJson(API.prebuilt);
+      state.prebuiltLogs=Array.isArray(data.items)?data.items:[];
+    }catch(e){
+      state.prebuiltLogs=[];
     }
+    renderPrebuiltList();
 
-    function renderEventCard(result) {
-      const rawEvent = result && result.raw_event && typeof result.raw_event === "object"
-        ? result.raw_event
-        : {};
-      const metadata = rawEvent.metadata && typeof rawEvent.metadata === "object"
-        ? rawEvent.metadata
-        : {};
+    // Select first prebuilt by default
+    if(state.prebuiltLogs.length>0)selectPrebuilt(0);
 
-      const steps = result && Array.isArray(result.steps) ? result.steps : [];
-      const processingStep = steps.find((step) => step && step.step === "processing") || {};
+    syncFormToEditor();
+    el.statusText.textContent="Ready";
+    setBanner("Dashboard ready. Select a prebuilt event or build a custom one.","success");
+    setTimeout(()=>setBanner(null),3000);
+  }
 
-      const actuator =
-        (result && result.latest_actuator_execution && typeof result.latest_actuator_execution === "object" && result.latest_actuator_execution)
-        || (result && result.actuator_forwarding && result.actuator_forwarding.execution && typeof result.actuator_forwarding.execution === "object" && result.actuator_forwarding.execution)
-        || null;
-
-      const rows = [];
-      rows.push({ label: "Event Type", value: rawEvent.event_type || "n/a" });
-      rows.push({ label: "Service", value: rawEvent.service_name || "n/a" });
-      rows.push({ label: "Environment", value: rawEvent.environment || "n/a" });
-      rows.push({ label: "Status Code", value: metadata.status_code || metadata.status || "n/a" });
-      rows.push({ label: "Latency (ms)", value: metadata.latency_ms || "n/a" });
-      rows.push({ label: "Processing", value: processingStep.summary || (processingStep.ok ? "processed" : "not processed") });
-
-      if (actuator) {
-        rows.push({ label: "Actuator Action", value: actuator.action || "n/a" });
-        rows.push({ label: "Actuator Status", value: actuator.execution_status || "n/a" });
-        rows.push({ label: "Actuator Output", value: actuator.output || "n/a" });
-        rows.push({ label: "Executed At", value: actuator.executed_at || "n/a" });
-      } else {
-        rows.push({ label: "Actuator", value: "Waiting for downstream response generation" });
-      }
-
-      let html = "";
-      rows.forEach((row) => {
-        html += '<div class="event-row"><strong>' + escapeHtml(row.label) + ':</strong> ' + escapeHtml(row.value) + '</div>';
-      });
-
-      elements.eventGrid.innerHTML = html;
-      elements.eventCard.className = "event-card visible";
-    }
-
-    function renderResult(result) {
-      state.lastResult = result;
-      elements.showPopupAgain.disabled = !state.lastResult;
-
-      const status = result && result.status ? result.status : "unknown";
-      const demoId = result && result.demo_id ? result.demo_id : "n/a";
-      const reason = result && result.reason ? result.reason : "";
-      const message = result && result.message ? result.message : "";
-      const action = result && result.response_execution && result.response_execution.action
-        ? result.response_execution.action
-        : "none";
-
-      const summaryText = "Demo " + demoId + " completed with status " + status + ". Action: " + action + (message ? ". " + message : "") + (reason ? ". Reason: " + reason : "");
-      elements.runSummary.className = "run-summary visible";
-      elements.runSummary.textContent = summaryText;
-
-      renderEventCard(result || {});
-      renderSteps(result && result.steps ? result.steps : []);
-      elements.jsonBox.textContent = JSON.stringify(result, null, 2);
-      elements.jsonBox.classList.toggle("hidden", !state.showRawJson);
-      elements.toggleRawJson.textContent = state.showRawJson ? "Hide Raw JSON" : "Show Raw JSON";
-    }
-
-    function showPopup(result, source) {
-      if (!result) {
-        return;
-      }
-
-      const status = result.status || "unknown";
-      const demoId = result.demo_id || "n/a";
-      const action = result.response_execution && result.response_execution.action
-        ? result.response_execution.action
-        : "none";
-      const message = result.message ? "\nMessage: " + result.message : "";
-      const reason = result.reason ? "\nReason: " + result.reason : "";
-      const sourceLabel = source ? source : "custom payload";
-
-      const title = status === "completed"
-        ? "Pipeline Run Completed"
-        : (status === "accepted" ? "Processing Trigger Accepted" : "Pipeline Run Finished with Notes");
-
-      const bodyText = "Source: " + sourceLabel + "\nDemo ID: " + demoId + "\nStatus: " + status + "\nAction: " + action + message + reason;
-
-      elements.popupTitle.textContent = title;
-      elements.popupBody.textContent = bodyText;
-      elements.popupOverlay.classList.add("visible");
-      elements.popupOverlay.setAttribute("aria-hidden", "false");
-    }
-
-    function closePopup() {
-      elements.popupOverlay.classList.remove("visible");
-      elements.popupOverlay.setAttribute("aria-hidden", "true");
-    }
-
-    function parseMetadata(rawText) {
-      if (!rawText || !rawText.trim()) {
-        return {};
-      }
-      const parsed = JSON.parse(rawText);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new Error("Metadata must be a JSON object.");
-      }
-      return parsed;
-    }
-
-    function buildCustomPayload() {
-      const form = new FormData(elements.customEventForm);
-      const statusCode = Number(form.get("status_code") || 500);
-      const latencyMs = Number(form.get("latency_ms") || 1200);
-
-      if (!Number.isFinite(statusCode) || statusCode < 100 || statusCode > 599) {
-        throw new Error("Status code must be between 100 and 599.");
-      }
-      if (!Number.isFinite(latencyMs) || latencyMs < 1) {
-        throw new Error("Latency must be at least 1 ms.");
-      }
-
-      return {
-        event_type: String(form.get("event_type") || "deployment.failed").trim(),
-        service_name: String(form.get("service_name") || "deployment-service").trim(),
-        message: String(form.get("message") || "Custom pipeline demo event").trim(),
-        log_level: String(form.get("log_level") || "ERROR").trim(),
-        environment: String(form.get("environment") || "production").trim(),
-        status_code: statusCode,
-        latency_ms: latencyMs,
-        metadata: parseMetadata(String(form.get("metadata_json") || "{}")),
-      };
-    }
-
-    function updatePayloadPreview() {
-      try {
-        const payload = buildCustomPayload();
-        elements.payloadPreview.classList.remove("invalid");
-        elements.payloadPreview.textContent = JSON.stringify(payload, null, 2);
-        return payload;
-      } catch (error) {
-        elements.payloadPreview.classList.add("invalid");
-        elements.payloadPreview.textContent = "Payload is invalid: " + error.message;
-        return null;
-      }
-    }
-
-    async function loadPrebuiltLogs() {
-      try {
-        const payload = await fetchJson(API.prebuilt);
-        state.prebuiltLogs = Array.isArray(payload.items) ? payload.items : [];
-        renderPrebuilt();
-        return true;
-      } catch (error) {
-        state.prebuiltLogs = [];
-        renderPrebuilt();
-        setBanner(error.message, "error");
-        return false;
-      }
-    }
-
-    async function loadHealth() {
-      try {
-        const health = await fetchJson(API.health);
-        state.healthSnapshot = health;
-        renderHealth(health);
-        return true;
-      } catch (error) {
-        state.healthSnapshot = null;
-        renderHealth(null);
-        setBanner(error.message, "error");
-        return false;
-      }
-    }
-
-    async function runPipeline(payload, sourceLabel) {
-      if (state.running) {
-        return;
-      }
-
-      setRunning(true);
-      setBanner("Running pipeline for " + sourceLabel + "...", "warn");
-
-      try {
-        const result = await fetchJson(API.run, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        renderResult(result);
-        if (result && result.pipeline_health) {
-          state.healthSnapshot = result.pipeline_health;
-          renderHealth(result.pipeline_health);
-        }
-
-        state.lastSource = sourceLabel;
-        showPopup(result, sourceLabel);
-
-        const status = result && result.status ? result.status : "unknown";
-        const variant = status === "completed" ? "success" : "warn";
-        setBanner("Pipeline run finished with status: " + status + ".", variant);
-      } catch (error) {
-        const detail = error && error.responsePayload && error.responsePayload.detail;
-        if (detail && typeof detail === "object") {
-          const partialResult = {
-            demo_id: state.lastResult && state.lastResult.demo_id ? state.lastResult.demo_id : "n/a",
-            status: "failed",
-            reason: detail.message || error.message,
-            failed_step: detail.failed_step || "unknown",
-            raw_event: payload,
-            steps: Array.isArray(detail.steps) ? detail.steps : [],
-            response_attempts: Array.isArray(detail.response_attempts) ? detail.response_attempts : []
-          };
-          renderResult(partialResult);
-        }
-        setBanner(detail && detail.message ? detail.message : error.message, "error");
-      } finally {
-        setRunning(false);
-      }
-    }
-
-    elements.refreshPrebuilt.addEventListener("click", async () => {
-      const ok = await loadPrebuiltLogs();
-      if (ok) {
-        setBanner("Prebuilt logs refreshed.", "success");
-      }
-    });
-
-    elements.checkHealth.addEventListener("click", async () => {
-      const ok = await loadHealth();
-      if (ok && state.healthSnapshot) {
-        const allHealthy = Boolean(state.healthSnapshot.ok);
-        setBanner(
-          allHealthy ? "All downstream services are healthy." : "One or more downstream services are unhealthy.",
-          allHealthy ? "success" : "warn"
-        );
-      }
-    });
-
-    elements.customEventForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      try {
-        const payload = updatePayloadPreview();
-        if (!payload) {
-          throw new Error("Fix payload JSON errors before running.");
-        }
-
-        await runPipeline(payload, "custom payload");
-      } catch (error) {
-        setBanner(error.message, "error");
-      }
-    });
-
-    const customFormInputs = elements.customEventForm.querySelectorAll("input, select, textarea");
-    customFormInputs.forEach((input) => {
-      input.addEventListener("input", updatePayloadPreview);
-      input.addEventListener("change", updatePayloadPreview);
-    });
-
-    elements.copyPayload.addEventListener("click", async () => {
-      const payload = updatePayloadPreview();
-      if (!payload) {
-        setBanner("Payload JSON is invalid. Fix form fields first.", "error");
-        return;
-      }
-
-      const copied = await copyTextOrPrompt(JSON.stringify(payload, null, 2));
-      if (copied) {
-        setBanner("Payload JSON copied.", "success");
-      } else {
-        setBanner("Clipboard blocked. Opened manual copy dialog.", "warn");
-      }
-    });
-
-    elements.toggleRawJson.addEventListener("click", () => {
-      state.showRawJson = !state.showRawJson;
-      elements.jsonBox.classList.toggle("hidden", !state.showRawJson);
-      elements.toggleRawJson.textContent = state.showRawJson ? "Hide Raw JSON" : "Show Raw JSON";
-    });
-
-    elements.showPopupAgain.addEventListener("click", () => {
-      if (state.lastResult) {
-        showPopup(state.lastResult, state.lastSource || "custom payload");
-      }
-    });
-
-    elements.closePopup.addEventListener("click", closePopup);
-
-    elements.popupOverlay.addEventListener("click", (event) => {
-      if (event.target === elements.popupOverlay) {
-        closePopup();
-      }
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && elements.popupOverlay.classList.contains("visible")) {
-        closePopup();
-      }
-    });
-
-    elements.copyResult.addEventListener("click", async () => {
-      if (!state.lastResult) {
-        return;
-      }
-
-      const status = state.lastResult.status || "unknown";
-      const demoId = state.lastResult.demo_id || "n/a";
-      const action = state.lastResult.response_execution && state.lastResult.response_execution.action
-        ? state.lastResult.response_execution.action
-        : "none";
-      const summary = "Demo ID: " + demoId + "\nStatus: " + status + "\nAction: " + action;
-
-      const copied = await copyTextOrPrompt(summary);
-      if (copied) {
-        setBanner("Summary copied to clipboard.", "success");
-      } else {
-        setBanner("Clipboard blocked. Opened manual copy dialog.", "warn");
-      }
-    });
-
-    async function initialize() {
-      setBanner("Loading pipeline dashboard...", "warn");
-      await Promise.all([loadPrebuiltLogs(), loadHealth()]);
-      updatePayloadPreview();
-      elements.toggleRawJson.textContent = "Show Raw JSON";
-      setBanner("Dashboard ready. Choose a prebuilt log or run a custom event.", "success");
-    }
-
-    initialize();
-  </script>
+  init();
+})();
+</script>
 </body>
 </html>
 """

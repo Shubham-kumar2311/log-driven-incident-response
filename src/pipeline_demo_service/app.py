@@ -279,6 +279,22 @@ async def _latest_actuator_execution() -> Optional[Dict[str, Any]]:
     return latest if isinstance(latest, dict) else None
 
 
+def _extract_actuator_received_payload(execution: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if not isinstance(execution, dict):
+        return {}
+
+    payload = execution.get("actuator_received_payload")
+    if isinstance(payload, dict):
+        return payload
+
+    # Backward-compatible fallback while old records may still exist.
+    detail = execution.get("detail")
+    if isinstance(detail, dict):
+        return detail
+
+    return {}
+
+
 @app.get("/", response_class=HTMLResponse)
 def root() -> str:
     return render_dashboard_html()
@@ -376,6 +392,8 @@ async def pipeline_run(payload: PipelineDemoRequest) -> Dict[str, Any]:
             "pipeline_health": health,
             "raw_event": raw_event,
             "processed_event": None,
+            "actuator_execution": None,
+            "actuator_received_payload": {},
             "signals": [],
             "steps": steps,
         }
@@ -385,6 +403,7 @@ async def pipeline_run(payload: PipelineDemoRequest) -> Dict[str, Any]:
         processed_event = raw_event
 
     latest_actuator_execution = await _latest_actuator_execution()
+    actuator_received_payload = _extract_actuator_received_payload(latest_actuator_execution)
 
     return {
         "demo_id": demo_id,
@@ -397,6 +416,8 @@ async def pipeline_run(payload: PipelineDemoRequest) -> Dict[str, Any]:
         "pipeline_health": health,
         "raw_event": raw_event,
         "processed_event": processed_event,
+        "actuator_execution": latest_actuator_execution,
+        "actuator_received_payload": actuator_received_payload,
         "latest_actuator_execution": latest_actuator_execution,
         "steps": steps,
         "next_hops": [

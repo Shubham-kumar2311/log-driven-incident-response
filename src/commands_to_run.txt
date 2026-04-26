@@ -1,70 +1,87 @@
 # ===========================================================
-# Log-Driven Incident Response - Service Startup Commands
+# Log-Driven Incident Response - Commands For All Modules
 # ===========================================================
-# Run each command in a SEPARATE terminal.
-# Install dependencies first: pip install -r requirements.txt
+# Run each service in a SEPARATE terminal.
+# Execute commands from repository root: e:\log-driven-incident-response
 
-# --- 1. Log Generators (produces realistic logs to src/logs/) ---
-cd src/log_generators
-python run_all_generators.py
-# Optional: python run_all_generators.py error_spike
+# -----------------------------------------------------------
+# 0) Install dependencies (all module requirement files)
+# -----------------------------------------------------------
+pip install -r src/auth_service/requirements.txt
+pip install -r src/log_generators/requirements.txt
+pip install -r src/log_ingestion_service/requirements.txt
+pip install -r src/log_processing_service/requirements.txt
+pip install -r src/detection_service/requirements.txt
+pip install -r src/incident_management/requirements.txt
+pip install -r src/response_service/requirements.txt
+pip install -r src/notification_service/requirements.txt
+pip install -r src/actuator_service/requirements.txt
+pip install -r src/ml_service/requirements.txt
+pip install -r src/pipeline_demo_service/requirements.txt
 
-# --- 2. Central Auth Service (port 3000) ---
+# -----------------------------------------------------------
+# 1) Core Services Startup Order
+# -----------------------------------------------------------
+# 1. Central Auth Service (port 3000)
 cd src/auth_service
 python app.py
 
-# --- 3. Log Ingestion Service (port 8001) ---
-# Dashboard UI available at http://localhost:8001
+# 2. Log Ingestion Service (port 8001, dashboard: /)
 cd src/log_ingestion_service
 python app.py
 
-# --- 4. Log Processing Service (port 8002) ---
+# 3. Log Processing Service (port 8002)
 cd src/log_processing_service
 python app.py
 
-# --- 5. Detection Service (port 8003) ---
+# 4. Detection Service (port 8003)
 cd src/detection_service
 python app.py
 
-# --- 6. Incident Management Service (port 8004) ---
+# 5. Incident Management Service (port 8004, dashboard: /)
 cd src/incident_management
 python app.py
 
-# --- 7. Response Service (port 8005) ---
+# 6. Response Service (port 8005)
 cd src/response_service
 python app.py
+# If port 8005 is busy, run on 8015 (PowerShell): $env:PORT=8015; python app.py
 
-# --- 8. Notification Service (port 8006) ---
+# 7. Notification Service (port 8006)
 cd src/notification_service
 python app.py
 
-# --- 9. Actuator Service (port 8007) ---
+# 8. Actuator Service (port 8007)
 cd src/actuator_service
 python app.py
 
-# ===========================================================
-# API Endpoints Reference
-# ===========================================================
-# Ingestion Service (port 8001):
-#   GET  /              - Dashboard UI
-#   GET  /health        - Health check
-#   GET  /metrics       - Service metrics
-#   POST /logs          - Ingest single log (JSON body)
-#   POST /logs/batch    - Ingest batch ({"logs": [...]})
-#   GET  /ingestion/stats       - Ingestion statistics
-#   GET  /ingestion/recent-logs - Last N ingested logs
-#
-# Incident Management Service (port 8004):
-#   GET  /              - Analyst Dashboard UI
-#   GET  /health        - Health check
-#   GET  /metrics       - Service metrics
-#   POST /signals       - Ingest detection signals
-#   GET  /incidents     - List incidents (filter: status, severity, affected_service, environment)
-#   GET  /incidents/active         - List active incidents
-#   GET  /incidents/{id}           - Incident detail with timeline, notes, actions
-#   PATCH /incidents/{id}/status   - Update lifecycle status
-#   POST /incidents/{id}/assign    - Assign analyst
-#   POST /incidents/{id}/notes     - Add investigation note
-#   GET  /incidents/{id}/notes     - Get notes
-#   GET  /incidents/{id}/timeline  - Get timeline
-#   POST /incidents/{id}/response  - Trigger response action
+# -----------------------------------------------------------
+# 2) Supporting/Optional Modules
+# -----------------------------------------------------------
+# 9. ML Service (port 9000)
+# Requires src/ml_service/model.pkl to exist.
+cd src/ml_service
+python app.py
+
+# 10. Pipeline Demo Service (port 8016, dashboard: /)
+cd src/pipeline_demo_service
+python app.py
+
+# 11. Log Generators (writes logs/events for simulation)
+cd src/log_generators
+python run_all_generators.py
+# Optional scenario: python run_all_generators.py error_spike
+
+# -----------------------------------------------------------
+# 3) Useful URLs
+# -----------------------------------------------------------
+# Auth:                 http://localhost:3000
+# Ingestion:            http://localhost:8001
+# Processing health:    http://localhost:8002/health
+# Detection health:     http://localhost:8003/health
+# Incident Management:  http://localhost:8004
+# Response health:      http://localhost:8005/health
+# Notification health:  http://localhost:8006/health
+# Actuator health:      http://localhost:8007/health
+# ML Service health:    http://localhost:9000/health
+# Pipeline Demo:        http://localhost:8016
