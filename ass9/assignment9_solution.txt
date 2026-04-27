@@ -1,0 +1,343 @@
+Q1(a) Test Plan
+
+
+1) Objective Of Testing
+- Validate correctness, reliability, and robustness of the project .
+- Verify end-to-end behavior from log generation to ingestion, processing, detection, incident handling, and response execution.
+- Detect cross-module behavior gaps in malformed/edge inputs before they cause incident escalation failures.
+
+2) Scope (Modules/Features To Be Tested)
+
+In-scope modules:
+- src/log_generators
+- src/log_ingestion_service
+- src/log_processing_service
+- src/detection_service
+- src/ml_service
+- src/incident_management
+- src/response_service
+- src/actuator_service
+- src/notification_service
+- src/auth_service
+- src/pipeline_demo_service
+
+In-scope capabilities:
+- Raw event intake and validation
+- Log normalization and feature extraction
+- Hybrid anomaly detection (rule + z-score + ML)
+- Incident severity/correlation and response triggering
+- Auth flows and role-based session handling
+- API contract checks for key service endpoints
+
+Out of scope:
+- Production deployment hardening and cloud cost/performance tuning
+- Full load/stress benchmarking of all services
+- Live third-party notification channel integration
+
+3) Types Of Testing Performed
+- Unit Testing:
+  - Validator/Normalizer/FeatureExtractor logic
+  - Decision engine matrix logic
+  - ML scoring and fallback behavior
+  - Auth utility/model behavior
+- Integration Testing:
+  - Processing pipeline end-to-end event handling
+  - Detection + ML combined behavior
+  - Auth API flow with mocked dependencies and test DB paths
+- API Black-box Testing:
+  - Auth endpoints (/health, /register, /login, /verify, /logout)
+  - Actuator endpoint contracts (defined test suite scenarios)
+- Regression Testing:
+  - Multi-suite pytest runs for processing, detection, ML, and auth
+- Exploratory Negative Testing:
+  - Invalid status/timestamp/null message inputs
+  - Timeout and invalid credential handling
+
+4) Tools
+- Python 3.13
+- pytest (automated tests)
+
+5) Entry Criteria
+- Codebase cloned and dependencies installed.
+- Python environment configured and import path resolved.
+- Core service source directories available under src/.
+- Test files and pytest available.
+
+6) Exit Criteria
+- At least 8 cross-module designed test cases executed.
+- Results documented with Actual Output and Pass/Fail status.
+- Evidence logs generated and stored in que/evidence.
+- At least 3 reproducible defects identified with suggested fixes.
+
+
+
+Q1(b) Test Cases (Major Module: Detection Service)
+
+Format per test case:
+Test Case ID | Test Scenario/Description | Input Data | Expected Output | Actual Output | Status
+
+Detection module behavior used in these cases:
+- Input: one event (or event sequence) to DetectionPipeline.process(event) / POST /detect
+- Output: list of detected problems (signals)
+- Problem label reference: signals[0].metadata.rule_type
+
+TC-DET-001
+- Scenario: Normal HTTP request should not create any detected problem.
+- Input Data:
+  {
+    event_id: det-001,
+    service_name: api-gateway,
+    event_type: http.request,
+    timestamp: 2026-04-27T10:00:00Z,
+    metadata: {status: 200, latency_ms: 120, path: /health}
+  }
+- Expected Output:
+  - signals = []
+  - problem detected = none
+- Actual Output:
+  - signals = []
+  - problem detected = none
+- Status: PASS
+
+TC-DET-002
+- Scenario: High request latency event should detect latency problem.
+- Input Data:
+  {
+    event_id: det-002,
+    service_name: api-gateway,
+    event_type: http.request,
+    timestamp: 2026-04-27T10:01:00Z,
+    metadata: {status: 200, latency_ms: 3200, path: /checkout}
+  }
+- Expected Output:
+  - signals[0].signal_type = HYBRID_ANOMALY
+  - signals[0].metadata.rule_type includes HIGH_LATENCY
+  - detected problem = HIGH_LATENCY
+  - severity = HIGH
+- Actual Output:
+  - signal generated
+  - detected problem = HIGH_LATENCY
+  - severity = HIGH
+- Status: PASS
+
+TC-DET-003
+- Scenario: Repeated auth login failures should detect brute-force problem.
+- Input Data:
+  - Sequence of 5 events within 60s:
+    {
+      service_name: auth-service,
+      event_type: auth.login_failed,
+      metadata: {client_ip: 203.0.113.10}
+    }
+- Expected Output:
+  - On 5th event, signal generated
+  - signals[0].metadata.rule_type includes BRUTE_FORCE_LOGIN
+  - detected problem = BRUTE_FORCE_LOGIN
+  - severity = HIGH
+- Actual Output:
+  - On threshold-crossing event, signal generated
+  - detected problem = BRUTE_FORCE_LOGIN
+  - severity = HIGH
+- Status: PASS
+
+TC-DET-004
+- Scenario: Slow DB query should detect DB performance problem.
+- Input Data:
+  {
+    event_id: det-004,
+    service_name: db-monitor,
+    event_type: db.query,
+    timestamp: 2026-04-27T10:03:00Z,
+    metadata: {latency_ms: 6500, query: SELECT * FROM orders}
+  }
+- Expected Output:
+  - signal generated
+  - signals[0].metadata.rule_type includes DB_SLOW_QUERY
+  - detected problem = DB_SLOW_QUERY
+  - severity = HIGH
+- Actual Output:
+  - signal generated
+  - detected problem = DB_SLOW_QUERY
+  - severity = HIGH
+- Status: PASS
+
+TC-DET-005
+- Scenario: Deployment failure event should detect deployment problem.
+- Input Data:
+  {
+    event_id: det-005,
+    service_name: deployment-service,
+    event_type: deployment.failed,
+    timestamp: 2026-04-27T10:04:00Z,
+    metadata: {version: v2.1.7, reason: crash_loop}
+  }
+- Expected Output:
+  - signal generated
+  - signals[0].metadata.rule_type includes DEPLOYMENT_FAILURE
+  - detected problem = DEPLOYMENT_FAILURE
+  - severity = HIGH
+- Actual Output:
+  - signal generated
+  - detected problem = DEPLOYMENT_FAILURE
+  - severity = HIGH
+- Status: PASS
+
+TC-DET-006
+- Scenario: HTTP 5xx burst should detect server error spike problem.
+- Input Data:
+  - Sequence of 10 events within 30s:
+    {
+      service_name: api-gateway,
+      event_type: http.request,
+      metadata: {status: 503, path: /orders}
+    }
+- Expected Output:
+  - On threshold-crossing event, signal generated
+  - signals[0].metadata.rule_type includes HTTP_ERROR_SPIKE
+  - detected problem = HTTP_ERROR_SPIKE
+  - severity = HIGH
+- Actual Output:
+  - On threshold-crossing event, signal generated
+  - detected problem = HTTP_ERROR_SPIKE
+  - severity = HIGH
+- Status: PASS
+
+TC-DET-007
+- Scenario: Repeated cache/redis connection errors should detect cache outage problem.
+- Input Data:
+  - Sequence of 5 events within 60s:
+    {
+      service_name: cache-layer,
+      event_type: cache.connection_error,
+      severity: ERROR,
+      message: Redis cache connection timeout
+    }
+- Expected Output:
+  - On threshold-crossing event, signal generated
+  - signals[0].metadata.rule_type includes CACHE_CONNECTION_ERROR
+  - detected problem = CACHE_CONNECTION_ERROR
+  - severity = HIGH
+- Actual Output:
+  - On threshold-crossing event, signal generated
+  - detected problem = CACHE_CONNECTION_ERROR
+  - severity = HIGH
+- Status: PASS
+
+TC-DET-008
+- Scenario: Event missing event_type should not produce false problem.
+- Input Data:
+  {
+    event_id: det-008,
+    service_name: api-gateway,
+    timestamp: 2026-04-27T10:08:00Z,
+    metadata: {status: 500, latency_ms: 5000}
+  }
+- Expected Output:
+  - signals = []
+  - problem detected = none
+- Actual Output:
+  - signals = []
+  - problem detected = none
+- Status: PASS
+
+
+============================================================
+Q2(a) Execution Results With Evidence
+============================================================
+
+Execution Summary
+- Designed detection-module test cases executed: 8/8
+- Passed: 8
+- Failed: 0
+
+Event-To-Problem Case Results
+- TC-DET-001: Input normal HTTP event -> Problem detected: none (PASS)
+- TC-DET-002: Input high-latency HTTP event -> Problem detected: HIGH_LATENCY (PASS)
+- TC-DET-003: Input 5 auth.login_failed events -> Problem detected: BRUTE_FORCE_LOGIN (PASS)
+- TC-DET-004: Input slow db.query event -> Problem detected: DB_SLOW_QUERY (PASS)
+- TC-DET-005: Input deployment.failed event -> Problem detected: DEPLOYMENT_FAILURE (PASS)
+- TC-DET-006: Input HTTP 5xx burst (10 events) -> Problem detected: HTTP_ERROR_SPIKE (PASS)
+- TC-DET-007: Input 5 cache connection error events -> Problem detected: CACHE_CONNECTION_ERROR (PASS)
+- TC-DET-008: Input malformed event (missing event_type) -> Problem detected: none (PASS)
+
+Automated Regression Evidence
+- test_detection_service.py: 16 passed
+
+Evidence (Logs)
+- que/evidence/detection_assignment_execution.log
+  - Case-wise event input to detected-problem output for TC-DET-001 to TC-DET-008.
+- que/evidence/test_detection_service.log
+  - Pytest evidence: 16 passed.
+
+Execution Commands Used
+- C:/Program Files/Python313/python.exe que/evidence/run_detection_assignment_cases.py
+- C:/Program Files/Python313/python.exe -m pytest test_detection_service.py -q
+
+
+============================================================
+Q2(b) Defect Identification And Analysis (At Least 3)
+============================================================
+
+BUG-DET-001
+- Description:
+  DecisionEngine uses generic bool() casting for anomaly flags, so string values like "false" are interpreted as True and can generate false anomalies.
+- Steps To Reproduce:
+  1. Call DecisionEngine.combine([], {"is_anomaly": "false"}, {"is_anomaly": "false"}).
+  2. Observe output fields zscore_triggered and ml_triggered.
+- Expected vs Actual:
+  - Expected: String "false" should be treated as False (or rejected as invalid type).
+  - Actual: bool("false") evaluates True, potentially escalating severity to HIGH.
+- Severity: HIGH
+- Suggested Fix:
+  Implement strict boolean parsing/type validation for is_anomaly fields before severity decisions.
+
+Evidence Observed:
+- zscore_triggered = true, ml_triggered = true, severity = HIGH
+
+BUG-DET-002
+- Description:
+  DecisionEngine assumes rule_signals is list-like; malformed input (None/string/int) causes unhandled exceptions.
+- Steps To Reproduce:
+  1. Call DecisionEngine.combine(None, {}, {}).
+  2. Repeat with rule_signals="not-a-list".
+- Expected vs Actual:
+  - Expected: Invalid rule_signals should be handled gracefully (fallback to empty list or controlled validation error).
+  - Actual: TypeError/AttributeError is raised, which can interrupt detection flow.
+- Severity: MEDIUM
+- Suggested Fix:
+  Add input schema validation at DecisionEngine entry and sanitize unsupported types before processing.
+
+Evidence Observed:
+- Exception type raised: TypeError
+
+BUG-DET-003
+- Description:
+  MLClient external response schema is not validated as dict; non-dict JSON can raise uncaught AttributeError.
+- Steps To Reproduce:
+  1. Mock external ML response where response.json() returns a list (for example: []).
+  2. Call MLClient.predict() in external mode.
+- Expected vs Actual:
+  - Expected: Invalid schema should return controlled error payload (for example invalid_response_schema).
+  - Actual: payload.get(...) fails on list and can propagate unhandled exception.
+- Severity: HIGH
+- Suggested Fix:
+  Validate payload type using isinstance(payload, dict) before field extraction and handle schema errors explicitly.
+
+Evidence Observed:
+- Exception type raised: AttributeError
+
+Defect Evidence Source
+- que/evidence/detection_assignment_execution.log
+  - Section: "Q2(b) Defect Reproduction Evidence"
+- que/evidence/test_detection_service.log
+  - Includes detection suite behavior, including malformed input handling coverage.
+
+
+============================================================
+Submission Note
+============================================================
+This solution includes:
+- Complete test plan for one major module: Detection Service (Q1a)
+- 8 detection-module test cases with required fields (Q1b)
+- Executed detection-module results with evidence logs (Q2a)
+- 3 reproducible detection defects with fixes (Q2b)
