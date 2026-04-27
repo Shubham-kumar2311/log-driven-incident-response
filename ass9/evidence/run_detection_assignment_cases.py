@@ -263,16 +263,16 @@ def main() -> None:
     print(f"Event-to-problem cases: {passed}/{len(case_results)} PASS")
 
     print("\n")
-    print("Q2(b) Defect Reproduction Evidence")
+    # print("Q2(b) Defect Reproduction Evidence")
 
-    defects = run_defect_checks()
-    for defect in defects:
-        print(
-            f"{defect['id']}: reproduced={defect['reproduced']} | observed={json.dumps(defect['observed'])}"
-        )
+    # defects = run_defect_checks()
+    # for defect in defects:
+    #     print(
+    #         f"{defect['id']}: reproduced={defect['reproduced']} | observed={json.dumps(defect['observed'])}"
+    #     )
 
-    print("-" * 72)
-    print(json.dumps({"cases": case_results, "defects": defects}, indent=2))
+    # print("-" * 72)
+    # print(json.dumps({"cases": case_results, "defects": defects}, indent=2))
 
 
 if __name__ == "__main__":
