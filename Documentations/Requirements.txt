@@ -1,12 +1,12 @@
 1) FUNCTIONAL REQUIREMENTS
   --------------------------
   - Ingest unstructured and semi-structured logs from multiple application services and infrastructure components in real time.
-  - Support log ingestion using external log shippers and streaming pipelines. (FluentBit/FileBit)
+  - Support log ingestion using external log shippers and streaming pipelines.
   -	Parse and normalize incoming logs into a common internal format to enable unified analysis and correlation.
   -	Parse key attributes such as service name, timestamp, severity level, error type, and contextual metadata.
   - Detect anomalies and failure patterns using rule-based and statistical analysis techniques.
   - Correlate related log events across different services and timeframes to identify root causes of failures.
-  - Send unsolvable error to human via notification or mail.
+  - Send critical errors to human operators via notification or mail.
   - Automatically create and manage incident records with lifecycle states including Open, In Progress, and Resolved.
   - Assign incident severity based on error frequency, impact, and correlation confidence.
   - Support configurable response playbooks that map incident types to automated and manual recovery actions.
